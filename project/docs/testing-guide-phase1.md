@@ -23,7 +23,8 @@ project/tests/
 │   ├── test_task_functions.py      # Task function unit tests (16 tests)
 │   ├── test_xcom_data_passing.py   # XCom data passing (36 tests) ✅ TASK-006
 │   └── test_airflow_init.py        # Airflow initialization (13 tests)
-└── kafka/                  # Kafka tests (Phase 1.3+)
+└── kafka/                  # Kafka tests (Phase 1.3+) ✅ 26 tests
+    └── test_events.py              # Event schema validation (26 tests) ✅ TASK-010
 ```
 
 See `project/tests/README.md` for detailed test suite documentation.
@@ -486,6 +487,125 @@ For detailed Airflow testing documentation, see:
 - **Airflow Tests README**: `project/tests/airflow/README.md`
 - **Main Test Suite**: `project/tests/README.md`
 
+## Event Schema Testing (TASK-010)
+
+### Overview
+
+Comprehensive test suite for workflow event schema validation and serialization.
+
+**Status**: ✅ Complete - 26 tests passing
+
+**Module**: `project/workflow_events/` - Pydantic-based event schema definitions
+
+### Running Event Schema Tests
+
+**Prerequisites**:
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Ensure Pydantic is installed
+pip install pydantic pytest
+```
+
+**Run All Event Schema Tests**:
+```bash
+# Run all event schema tests
+pytest project/tests/kafka/test_events.py -v
+
+# Run with verbose output
+pytest project/tests/kafka/test_events.py -v -s
+```
+
+**Test Results**:
+- ✅ **Total Tests**: 26 tests
+- ✅ **Status**: All passing (26/26)
+- ✅ **Execution Time**: ~0.1 seconds
+- ✅ **Coverage**: Event creation, validation, serialization, deserialization
+
+### Test Categories
+
+**Event Enums** (2 tests):
+- Event type enumeration validation
+- Event source enumeration validation
+
+**Event Payload** (3 tests):
+- Valid payload creation
+- Empty payload handling
+- Nested payload data
+
+**Event Metadata** (4 tests):
+- Valid metadata creation
+- Default version handling
+- Environment validation (dev/staging/prod)
+- Invalid environment rejection
+
+**Event Model** (5 tests):
+- Event creation with defaults
+- Event creation with explicit values
+- Invalid event type rejection
+- Invalid source rejection
+- Missing required fields validation
+
+**Serialization** (5 tests):
+- Serialize to dictionary
+- Serialize to JSON
+- Deserialize from JSON
+- Deserialize from dictionary
+- Round-trip serialization
+
+**Schema Versioning** (3 tests):
+- Version field handling
+- Custom version support
+- Version in event metadata
+
+**Validation** (4 tests):
+- Empty workflow_id handling
+- Complex nested payload data
+- All event types validation
+- All event sources validation
+
+### Using Event Schema
+
+**Import Event Models**:
+```python
+from workflow_events import (
+    WorkflowEvent,
+    EventType,
+    EventSource,
+    WorkflowEventPayload,
+    WorkflowEventMetadata
+)
+```
+
+**Create an Event**:
+```python
+event = WorkflowEvent(
+    event_type=EventType.WORKFLOW_COMPLETED,
+    source=EventSource.AIRFLOW,
+    workflow_id="example_dag",
+    workflow_run_id="run_123",
+    payload=WorkflowEventPayload(data={"status": "success"}),
+    metadata=WorkflowEventMetadata(environment="dev")
+)
+```
+
+**Serialize to JSON**:
+```python
+json_str = event.model_dump_json()
+```
+
+**Deserialize from JSON**:
+```python
+event = WorkflowEvent.model_validate_json(json_str)
+```
+
+### Documentation
+
+For complete event schema documentation, see:
+- **[Event Schema Guide](event-schema-guide.md)** - Complete event schema documentation
+- **[TASK-010](../dev/tasks/TASK-010.md)** - Implementation task details
+
 ## Next Steps
 
 After successful testing:
@@ -495,7 +615,10 @@ After successful testing:
 4. ✅ TASK-004: DAG Validation and Testing - **COMPLETE** (57 tests, 100% coverage)
 5. ✅ TASK-005: Migrate DAGs to TaskFlow API - **COMPLETE** (TaskFlow API implemented, all tests passing)
 6. ✅ TASK-006: Implement Data Passing with XCom - **COMPLETE** (36 tests, all patterns implemented)
-7. Proceed to TASK-007: Unit Tests for TaskFlow DAGs
-8. Document any issues encountered
-9. Run integration tests when services are started
+7. ✅ TASK-010: Event Schema Definition - **COMPLETE** (26 tests, Pydantic models, JSON schema)
+8. Proceed to TASK-007: Unit Tests for TaskFlow DAGs
+9. Proceed to TASK-009: Kafka Docker Setup
+10. Proceed to TASK-011: Kafka Producer Implementation (depends on TASK-009, TASK-010)
+11. Document any issues encountered
+12. Run integration tests when services are started
 

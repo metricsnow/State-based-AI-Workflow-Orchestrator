@@ -16,10 +16,14 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
   - ✅ **Airflow DAG Tests**: 93 tests passing, 100% coverage
     - TASK-004: DAG validation (57 tests)
     - TASK-006: XCom data passing (36 tests)
+  - ✅ **Event Schema Tests**: 26 tests passing (TASK-010)
   - Infrastructure tests, Airflow tests, and testing best practices
 - **[TaskFlow API Guide](taskflow-api-guide.md)** - TaskFlow API implementation guide
   - ✅ TASK-005: TaskFlow API migration (Complete)
   - ✅ TASK-006: XCom data passing patterns (Complete)
+- **[Event Schema Guide](event-schema-guide.md)** - Workflow event schema documentation
+  - ✅ TASK-010: Event Schema Definition (Complete)
+  - Pydantic models, validation, serialization, and JSON schema generation
 
 ### Main PRD
 - **[Main PRD](prd.md)** - Complete product requirements document
@@ -54,7 +58,8 @@ docs/
 ├── prd_phase9.md               # Phase 9 PRD (Enterprise Features)
 ├── setup-guide.md              # Environment setup guide
 ├── testing-guide-phase1.md     # Testing procedures
-└── taskflow-api-guide.md       # TaskFlow API implementation guide
+├── taskflow-api-guide.md       # TaskFlow API implementation guide
+└── event-schema-guide.md       # Event schema documentation (TASK-010)
 ```
 
 ## Security Requirements
@@ -72,6 +77,7 @@ See security sections in each PRD for details.
   - ✅ TASK-004: DAG Validation and Testing (Complete - 57 tests, 100% coverage)
   - ✅ TASK-005: Migrate DAGs to TaskFlow API (Complete - TaskFlow API implemented)
   - ✅ TASK-006: Implement Data Passing with XCom (Complete - 36 tests, all patterns implemented)
+  - ✅ TASK-010: Event Schema Definition (Complete - 26 tests, Pydantic models, JSON schema)
 
 ## Contributing
 

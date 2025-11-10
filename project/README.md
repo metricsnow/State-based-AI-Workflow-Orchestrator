@@ -7,12 +7,14 @@ This directory contains the main project implementation for Phase 1.
 - `dags/` - Airflow DAG definitions
 - `logs/` - Airflow execution logs
 - `plugins/` - Airflow custom plugins
+- `workflow_events/` - Workflow event schema module (TASK-010) ✅
+  - Pydantic models for event validation and serialization
 - `dev/` - Development artifacts (tasks, bugs)
 - `docs/` - Project documentation (PRDs)
 - `tests/` - Test suite organized by module
   - `infrastructure/` - Docker Compose and infrastructure tests
   - `airflow/` - Airflow DAG and workflow tests (Phase 1.2+)
-  - `kafka/` - Kafka producer/consumer tests (Phase 1.3+)
+  - `kafka/` - Kafka producer/consumer tests (Phase 1.3+) ✅ Event schema tests (26 tests)
 
 ## Quick Start
 
@@ -64,6 +66,12 @@ print('Import errors:', dag_bag.import_errors)
 "
 ```
 
+**Event schema tests** (TASK-010):
+```bash
+# Run event schema validation tests
+pytest project/tests/kafka/test_events.py -v
+```
+
 **All tests**:
 ```bash
 pytest project/tests/ -v
@@ -81,5 +89,6 @@ See `tests/README.md` for comprehensive testing documentation.
 
 - **Phase 1 PRD**: `docs/prd_phase1.md` - Detailed Phase 1 requirements
 - **Testing Guide**: `docs/testing-guide-phase1.md` - Testing procedures
+- **Event Schema Guide**: `docs/event-schema-guide.md` - Event schema documentation (TASK-010) ✅
 - **Test Suite**: `tests/README.md` - Test suite documentation
 
