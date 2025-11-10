@@ -115,10 +115,44 @@ docker-compose logs -f
 - Airflow Webserver: `healthy`
 - Airflow Scheduler: `running`
 
-### Step 7: Verify Services
+### Step 7: Initialize Airflow
+
+**IMPORTANT**: Airflow database must be initialized before accessing the UI.
 
 ```bash
-# Check Airflow UI
+# Run Airflow initialization script
+./scripts/init-airflow.sh
+```
+
+This script will:
+- Wait for PostgreSQL to be ready
+- Initialize Airflow database schema
+- Create admin user (username: `admin`, password: `admin`)
+- Verify Airflow configuration
+- Test Airflow CLI commands
+
+**Expected Output**:
+```
+[INFO] PostgreSQL is ready!
+[INFO] Initializing Airflow database...
+Initialization done
+[INFO] Airflow database initialized successfully!
+[INFO] Checking if admin user exists...
+[INFO] Admin user created successfully! (or [WARN] Admin user already exists)
+[INFO] Airflow CLI is working correctly
+2.8.4
+[INFO] Airflow initialization complete!
+```
+
+**Note**: 
+- If you see warnings about database already being initialized or user already existing, that's normal for subsequent runs
+- The script uses `docker-compose run --rm` which creates one-off containers for initialization
+- This allows initialization even if the webserver service isn't running yet
+
+### Step 8: Verify Services
+
+```bash
+# Check Airflow UI health
 curl http://localhost:8080/health
 # Or open in browser: http://localhost:8080
 
@@ -127,9 +161,25 @@ docker-compose exec kafka kafka-broker-api-versions --bootstrap-server localhost
 
 # Check PostgreSQL
 docker-compose exec postgres pg_isready -U airflow
+
+# Verify Airflow admin user
+docker-compose exec airflow-webserver airflow users list
 ```
 
-### Step 8: Run Integration Tests (Optional)
+### Step 9: Access Airflow UI
+
+1. **Open browser**: http://localhost:8080
+2. **Login with**:
+   - Username: `admin`
+   - Password: `admin`
+3. **Verify**:
+   - No errors in UI
+   - DAGs list is visible (empty initially)
+   - Scheduler is running
+
+⚠️ **Security**: Change the admin password in production!
+
+### Step 10: Run Integration Tests (Optional)
 
 ```bash
 # Ensure services are running
@@ -152,6 +202,7 @@ After setup, your project structure should be:
 ├── venv/                       # Python virtual environment
 ├── scripts/                    # Utility scripts
 │   ├── generate-fernet-key.sh
+│   ├── init-airflow.sh         # Airflow initialization script
 │   └── test-docker-compose.sh
 └── project/
     ├── dags/                   # Airflow DAGs (empty initially)
@@ -217,6 +268,23 @@ After setup, your project structure should be:
    docker-compose up -d
    ```
 
+### Airflow Initialization Issues
+
+1. **Database not initialized**:
+   ```bash
+   # Run initialization script
+   ./scripts/init-airflow.sh
+   ```
+
+2. **Admin user creation fails**:
+   - Check if user already exists: `docker-compose run --rm airflow-webserver airflow users list`
+   - If user exists, script will skip creation (this is normal)
+
+3. **Webserver won't start**:
+   - Ensure database is initialized first: `./scripts/init-airflow.sh`
+   - Check logs: `docker-compose logs airflow-webserver`
+   - Verify PostgreSQL is healthy: `docker-compose ps postgres`
+
 ### Test Failures
 
 1. **Install test dependencies**:
@@ -240,7 +308,7 @@ After setup, your project structure should be:
 After successful setup:
 
 1. ✅ **TASK-001 Complete**: Docker Compose environment setup
-2. **TASK-002**: Airflow Configuration and Initialization
+2. ✅ **TASK-002 Complete**: Airflow Configuration and Initialization
 3. **TASK-003**: Basic DAG Creation
 4. **TASK-004**: DAG Validation and Testing
 
