@@ -1,0 +1,103 @@
+# Build artifacts
+dist/
+build/
+*.min.js
+*.map
+
+# Dependencies
+node_modules/
+vendor/
+.pnp.*
+
+# Configuration and sensitive files
+.env*
+*.key
+*.pem
+secrets/
+
+# Large data files
+*.csv
+*.json.gz
+*.db
+data/
+
+# Generated code
+generated/
+.next/
+.nuxt/
+
+# Framework-specific exclusions
+.cursor/
+.cursor/logs/
+.cursor/remediation/
+temp/
+development_framework_v2/
+development_framework_v2a/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursorignore
+.cursorrules
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environment
+venv/
+ENV/
+env/
+
