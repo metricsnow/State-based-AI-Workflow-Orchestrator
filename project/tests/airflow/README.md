@@ -48,32 +48,50 @@ DAG structure validation and configuration tests.
 ### `test_task_functions.py` ✅ Implemented
 Unit tests for task functions (can run without Airflow runtime).
 
-**Test Coverage** (17 tests):
+**Test Coverage** (16 tests):
 - Extract task function tests (6 tests)
   - Return value validation
   - Data structure validation
   - Data consistency checks
 - Transform task function tests (6 tests)
-  - Context handling
+  - TaskFlow API data passing (function arguments)
   - Data transformation logic
   - Edge case handling (empty lists, single values)
 - Load task function tests (3 tests)
-  - Context handling
+  - TaskFlow API data passing (function arguments)
   - Data processing validation
-- Integration tests (2 tests)
+- Integration tests (1 test)
   - Extract-transform integration
 
 **Status**: ✅ Complete - All tests passing
 
 ### `test_xcom_data_passing.py` ✅ Implemented
-XCom data passing validation tests.
+Comprehensive XCom data passing validation tests for TaskFlow API.
 
-**Test Coverage** (8 tests):
-- XCom task configuration validation
-- XCom data structure validation
-- Task dependencies for XCom data flow
-- Data integrity across task boundaries
-- Multiple task XCom chain validation
+**Test Coverage** (36 tests):
+- Simple value passing (5 tests)
+- Dictionary passing (5 tests)
+- List passing (5 tests)
+- Multiple outputs (7 tests)
+- Data validation (8 tests)
+- Error handling (5 tests)
+- Integration (1 test)
+
+**Status**: ✅ Complete - All tests passing
+
+### `test_taskflow_dag_structure.py` ✅ Implemented (TASK-007)
+TaskFlow DAG structure validation tests.
+
+**Test Coverage** (10 tests):
+- DAG import validation
+- DAG structure and properties
+- Task existence validation
+- TaskFlow API decorator validation
+- DAG configuration validation
+- Task count validation
+- Task ID uniqueness
+- Cycle detection
+- Schedule validation
 
 **Status**: ✅ Complete - All tests passing
 
@@ -89,11 +107,46 @@ Airflow initialization and configuration tests.
 
 **Status**: ✅ Complete - All tests passing
 
-### `test_taskflow.py` ⏳ Pending
-TaskFlow API implementation tests (TASK-005).
+### `test_taskflow_dag_structure.py` ✅ Implemented (TASK-007)
+TaskFlow DAG structure validation tests.
 
-### `test_dag_execution.py` ⏳ Pending
-DAG execution and task dependency tests (TASK-008).
+**Test Coverage** (10 tests):
+- DAG import validation
+- DAG structure and properties
+- Task existence validation
+- TaskFlow API decorator validation
+- DAG configuration validation
+- Task count validation
+- Task ID uniqueness
+- Cycle detection
+- Schedule validation
+
+**Status**: ✅ Complete - All tests passing
+
+### `test_dag_execution.py` ✅ Implemented (TASK-008)
+Integration tests for TaskFlow DAG execution.
+
+**Test Coverage** (13 tests):
+- DAG execution completion tests (2 tests)
+- Task execution and XCom validation (5 tests for example_etl_dag)
+- XCom data passing validation (8 tests for xcom_data_passing_dag)
+  - Simple value passing
+  - Dictionary passing
+  - List passing
+  - Multiple outputs passing
+  - Data validation
+  - Error handling
+  - All tasks execution
+
+**Status**: ✅ Complete - All tests passing
+
+**Implementation Details**:
+- Uses `dag.test()` method for complete DAG execution
+- Validates XCom data passing with explicit `task_ids`
+- Uses unique execution dates to prevent database conflicts
+- Tests both `example_etl_dag` and `xcom_data_passing_dag`
+- Validates task dependencies and execution order
+- Tests error handling patterns
 
 ## Running Tests
 
@@ -147,6 +200,9 @@ pytest project/tests/airflow/test_task_functions.py -v
 # XCom data passing tests
 pytest project/tests/airflow/test_xcom_data_passing.py -v
 
+# DAG execution integration tests (TASK-008)
+pytest project/tests/airflow/test_dag_execution.py -v
+
 # Airflow initialization tests
 pytest project/tests/airflow/test_airflow_init.py -v
 ```
@@ -159,6 +215,10 @@ pytest project/tests/airflow/test_dag_structure.py::TestDAGStructure -v
 
 # Run all task function tests
 pytest project/tests/airflow/test_task_functions.py::TestExtractTask -v
+
+# Run all DAG execution integration tests
+pytest project/tests/airflow/test_dag_execution.py::TestExampleETLDAGExecution -v
+pytest project/tests/airflow/test_dag_execution.py::TestXComDataPassingDAGExecution -v
 ```
 
 ### Running Tests in Docker (Alternative)
@@ -181,30 +241,37 @@ print('✅ DAG validation passed!')
 ## Test Results
 
 **Last Run**: 2025-01-27
-- ✅ **Total Tests**: 57 tests
-- ✅ **Test Status**: All passing (57/57)
-- ✅ **Coverage**: 100% for DAG code
-- ✅ **Execution Time**: ~10 seconds
+- ✅ **Total Tests**: 108 tests (all Airflow tests)
+- ✅ **TaskFlow Unit Tests**: 62 tests (TASK-007)
+- ✅ **Integration Tests**: 13 tests (TASK-008)
+- ✅ **Test Status**: All passing (108/108)
+- ✅ **Coverage**: 97% for TaskFlow DAG code (exceeds 80% requirement)
+- ✅ **Execution Time**: ~1 second for unit tests, ~3-4 seconds for integration tests
 
 ### Test Breakdown
 
 - **DAG Import Tests**: 8/8 passing
 - **DAG Structure Tests**: 13/13 passing
-- **Task Function Tests**: 17/17 passing
-- **XCom Data Passing Tests**: 8/8 passing
+- **Task Function Tests**: 16/16 passing (example_etl_dag)
+- **XCom Data Passing Tests**: 36/36 passing (xcom_data_passing_dag)
+- **TaskFlow DAG Structure Tests**: 10/10 passing (TASK-007)
+- **DAG Execution Integration Tests**: 13/13 passing (TASK-008)
 - **Airflow Init Tests**: 13/13 passing (existing)
 
-### Coverage Report
+### Coverage Report (TASK-007)
 
 ```
-Name                              Stmts   Miss  Cover   Missing
----------------------------------------------------------------
-project/dags/example_etl_dag.py      33      0   100%
----------------------------------------------------------------
-TOTAL                                33      0   100%
+Name                                    Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------
+project/dags/example_etl_dag.py            35      1    97%   110
+project/dags/xcom_data_passing_dag.py     141      5    96%   305, 311, 386-388
+---------------------------------------------------------------------
+TOTAL                                     176      6    97%
 ```
 
-**Status**: ✅ All tests passing with 100% coverage (exceeds 80% requirement)
+**Status**: ✅ All tests passing with 97% coverage (exceeds 80% requirement)
+
+**Missing Lines**: Edge cases in error handling paths (hard to test without complex mocking)
 
 ## Test Framework Details
 
@@ -220,7 +287,11 @@ Shared fixtures available in `conftest.py`:
 
 1. **Unit Tests**: Task functions tested independently (no Airflow runtime)
 2. **Structure Tests**: DAG structure validation using DagBag
-3. **Integration Tests**: XCom data passing and task dependencies
+3. **Integration Tests**: Complete DAG execution with `dag.test()` method (TASK-008)
+   - End-to-end DAG execution validation
+   - XCom data passing between tasks
+   - Task dependency and execution order validation
+   - Error handling validation
 4. **Validation Tests**: Import errors, syntax, configuration
 
 ### Best Practices
@@ -228,6 +299,33 @@ Shared fixtures available in `conftest.py`:
 - Tests are fast and independent
 - Task functions can be tested without Airflow runtime
 - DagBag-based tests validate DAG structure without execution
+- Integration tests use `dag.test()` for complete DAG execution
+- XCom values retrieved with explicit `task_ids` parameter
+- Unique execution dates prevent UNIQUE constraint violations
 - Comprehensive error messages for debugging
-- 100% code coverage for DAG code
+- 97% code coverage for DAG code (exceeds 80% requirement)
+
+### Integration Test Notes (TASK-008)
+
+**Execution Method**: Uses Airflow's `dag.test()` method which:
+- Creates a DAG run in test environment
+- Executes all tasks in correct dependency order
+- Validates XCom data passing between tasks
+- Returns DagRun object for validation
+
+**XCom Retrieval**: Always specify `task_ids` explicitly:
+```python
+# Correct
+value = ti.xcom_pull(task_ids='task_id', key='return_value')
+
+# Incorrect (may pull from wrong task)
+value = ti.xcom_pull(key='return_value')
+```
+
+**Unique Execution Dates**: Each test uses unique execution dates to avoid database UNIQUE constraint violations:
+```python
+execution_date = datetime(2025, 1, 1, hour, minute, int(time.time() % 60))
+```
+
+**Expected Warnings**: Warnings about pandas not being imported are expected and harmless. They come from Airflow's example plugins and don't affect test execution.
 

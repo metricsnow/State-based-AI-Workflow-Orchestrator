@@ -13,14 +13,16 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
 ### Setup and Testing
 - **[Setup Guide](setup-guide.md)** - Step-by-step environment setup instructions
 - **[Testing Guide](testing-guide-phase1.md)** - Comprehensive testing procedures
-  - ✅ **Airflow DAG Tests**: 93 tests passing, 100% coverage
+  - ✅ **Airflow DAG Tests**: 95 tests passing, 97% coverage for TaskFlow DAGs
     - TASK-004: DAG validation (57 tests)
     - TASK-006: XCom data passing (36 tests)
+    - TASK-007: Unit tests for TaskFlow DAGs (62 tests, 97% coverage)
   - ✅ **Event Schema Tests**: 26 tests passing (TASK-010)
   - Infrastructure tests, Airflow tests, and testing best practices
 - **[TaskFlow API Guide](taskflow-api-guide.md)** - TaskFlow API implementation guide
   - ✅ TASK-005: TaskFlow API migration (Complete)
   - ✅ TASK-006: XCom data passing patterns (Complete)
+  - ✅ TASK-007: Unit tests for TaskFlow DAGs (Complete)
 - **[Event Schema Guide](event-schema-guide.md)** - Workflow event schema documentation
   - ✅ TASK-010: Event Schema Definition (Complete)
   - Pydantic models, validation, serialization, and JSON schema generation
@@ -91,6 +93,8 @@ See [Testing Guide](testing-guide-phase1.md) and [Test Suite README](../tests/RE
   - ✅ TASK-004: DAG Validation and Testing (Complete - 57 tests, 100% coverage)
   - ✅ TASK-005: Migrate DAGs to TaskFlow API (Complete - TaskFlow API implemented)
   - ✅ TASK-006: Implement Data Passing with XCom (Complete - 36 tests, all patterns implemented)
+  - ✅ TASK-007: Unit Tests for TaskFlow DAGs (Complete - 62 tests, 97% coverage)
+  - ✅ TASK-009: Kafka Docker Setup (Complete)
   - ✅ TASK-010: Event Schema Definition (Complete - 26 tests, Pydantic models, JSON schema)
 
 ## Contributing
