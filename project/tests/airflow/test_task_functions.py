@@ -20,9 +20,26 @@ project_root = Path(__file__).parent.parent.parent
 dags_path = project_root / "dags"
 sys.path.insert(0, str(dags_path))
 
-# Import task functions from example_etl_dag
-# The DAG initialization will happen, but we only use the functions
-from example_etl_dag import extract_data, transform_data, load_data
+# Import DAG function from example_etl_dag
+# With TaskFlow API, task functions are nested inside the DAG function
+# We'll extract them for testing
+from example_etl_dag import example_etl_dag
+
+# Extract task functions from the DAG function
+# TaskFlow API functions are regular Python functions, just decorated
+# We can access them by calling the DAG function and getting the task objects
+dag_instance = example_etl_dag()
+
+# Get the actual Python functions from the task objects
+# TaskFlow tasks have a .python_callable attribute
+extract_task = dag_instance.get_task('extract')
+transform_task = dag_instance.get_task('transform')
+load_task = dag_instance.get_task('load')
+
+# Extract the actual Python functions
+extract_data = extract_task.python_callable
+transform_data = transform_task.python_callable
+load_data = load_task.python_callable
 
 
 class TestExtractTask:
@@ -75,75 +92,43 @@ class TestTransformTask:
         """Fixture providing sample extracted data."""
         return {'data': [1, 2, 3, 4, 5]}
 
-    def test_transform_data_requires_context(self):
-        """Test that transform_data requires context parameter."""
-        # Create a mock context with task_instance
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return {'data': [1, 2, 3, 4, 5]}
-
-        class MockContext:
-            def __init__(self):
-                self.ti = MockTaskInstance()
-
-        context = MockContext()
-        result = transform_data(**{'ti': context.ti})
+    def test_transform_data_requires_data_argument(self, sample_extracted_data):
+        """Test that transform_data requires data parameter (TaskFlow API)."""
+        # TaskFlow API: data is passed as function argument, not via context
+        result = transform_data(sample_extracted_data)
         assert isinstance(result, dict), \
             "transform_data should return a dictionary"
 
     def test_transform_data_returns_dict(self, sample_extracted_data):
         """Test that transform_data returns a dictionary."""
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return sample_extracted_data
-
-        context = {'ti': MockTaskInstance()}
-        result = transform_data(**context)
+        result = transform_data(sample_extracted_data)
         assert isinstance(result, dict), \
             "transform_data should return a dictionary"
 
     def test_transform_data_contains_transformed_data_key(self, sample_extracted_data):
         """Test that transform_data returns 'transformed_data' key."""
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return sample_extracted_data
-
-        context = {'ti': MockTaskInstance()}
-        result = transform_data(**context)
+        result = transform_data(sample_extracted_data)
         assert 'transformed_data' in result, \
             "transform_data result should contain 'transformed_data' key"
 
     def test_transform_data_multiplies_by_two(self, sample_extracted_data):
         """Test that transform_data multiplies values by 2."""
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return sample_extracted_data
-
-        context = {'ti': MockTaskInstance()}
-        result = transform_data(**context)
+        result = transform_data(sample_extracted_data)
         expected = [2, 4, 6, 8, 10]
         assert result['transformed_data'] == expected, \
             f"transform_data should multiply by 2, expected {expected}, got {result['transformed_data']}"
 
     def test_transform_data_handles_empty_list(self):
         """Test that transform_data handles empty input."""
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return {'data': []}
-
-        context = {'ti': MockTaskInstance()}
-        result = transform_data(**context)
+        empty_data = {'data': []}
+        result = transform_data(empty_data)
         assert result['transformed_data'] == [], \
             "transform_data should handle empty lists"
 
     def test_transform_data_handles_single_value(self):
         """Test that transform_data handles single value."""
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return {'data': [42]}
-
-        context = {'ti': MockTaskInstance()}
-        result = transform_data(**context)
+        single_data = {'data': [42]}
+        result = transform_data(single_data)
         assert result['transformed_data'] == [84], \
             "transform_data should handle single values"
 
@@ -156,41 +141,27 @@ class TestLoadTask:
         """Fixture providing sample transformed data."""
         return {'transformed_data': [2, 4, 6, 8, 10]}
 
-    def test_load_data_requires_context(self, sample_transformed_data):
-        """Test that load_data requires context parameter."""
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return sample_transformed_data
-
-        context = {'ti': MockTaskInstance()}
-        # load_data should not raise an error
-        result = load_data(**context)
+    def test_load_data_requires_data_argument(self, sample_transformed_data):
+        """Test that load_data requires data parameter (TaskFlow API)."""
+        # TaskFlow API: data is passed as function argument, not via context
+        result = load_data(sample_transformed_data)
         # load_data returns None, so we just check it doesn't raise
-        assert result is None or True, \
-            "load_data should execute without errors"
+        assert result is None, \
+            "load_data should execute without errors and return None"
 
     def test_load_data_processes_data(self, sample_transformed_data):
         """Test that load_data processes transformed data."""
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return sample_transformed_data
-
-        context = {'ti': MockTaskInstance()}
         # Should not raise an error
-        result = load_data(**context)
+        result = load_data(sample_transformed_data)
         # load_data returns None, so we just verify it executes
-        assert True, "load_data should process data without errors"
+        assert result is None, "load_data should process data without errors"
 
     def test_load_data_handles_empty_data(self):
         """Test that load_data handles empty transformed data."""
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return {'transformed_data': []}
-
-        context = {'ti': MockTaskInstance()}
+        empty_data = {'transformed_data': []}
         # Should not raise an error
-        result = load_data(**context)
-        assert True, "load_data should handle empty data"
+        result = load_data(empty_data)
+        assert result is None, "load_data should handle empty data"
 
 
 class TestTaskFunctionIntegration:
@@ -201,13 +172,8 @@ class TestTaskFunctionIntegration:
         # Extract data
         extracted = extract_data()
         
-        # Simulate transform receiving extracted data
-        class MockTaskInstance:
-            def xcom_pull(self, task_ids):
-                return extracted
-
-        context = {'ti': MockTaskInstance()}
-        transformed = transform_data(**context)
+        # TaskFlow API: transform receives data as function argument
+        transformed = transform_data(extracted)
         
         # Verify transformation
         assert 'transformed_data' in transformed

@@ -1,175 +1,151 @@
 """
-Example ETL DAG using traditional Airflow operators.
+Example ETL DAG using TaskFlow API.
 
 This DAG demonstrates a basic Extract, Transform, Load (ETL) pattern
-using PythonOperator and BashOperator. It serves as a foundation
-before migrating to TaskFlow API in TASK-005.
+using TaskFlow API with @dag and @task decorators. Migrated from
+traditional operators in TASK-005.
 
 DAG Structure:
 - extract: Extracts sample data
 - transform: Transforms extracted data (multiplies by 2)
-- validate: Validates transformed data (BashOperator)
+- validate: Validates transformed data (BashOperator via @task.bash)
 - load: Loads transformed data
 
 Data Flow:
-- extract returns data via XCom
-- transform pulls data from extract via XCom
+- extract returns data automatically via XCom
+- transform receives data via function argument (automatic XCom)
 - validate checks data format
-- load processes final data
+- load receives data via function argument (automatic XCom)
+
+TaskFlow API Benefits:
+- Automatic XCom management
+- Type hints for better IDE support
+- Python-native syntax
+- Automatic dependency management via function calls
 """
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from typing import Dict, List
 
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
-
-# Default arguments for all tasks
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-}
+from airflow.decorators import dag, task
 
 
-def extract_data(**context) -> Dict[str, List[int]]:
-    """
-    Extract data from source.
-    
-    This function simulates extracting data from a data source.
-    In a real scenario, this would connect to a database, API, or file.
-    
-    Args:
-        **context: Airflow task context (unused in this example)
-    
-    Returns:
-        Dict containing extracted data list
-    """
-    print("Extracting data from source...")
-    # Simulate extracted data
-    data = [1, 2, 3, 4, 5]
-    print(f"Extracted {len(data)} records: {data}")
-    return {'data': data}
-
-
-def transform_data(**context) -> Dict[str, List[int]]:
-    """
-    Transform extracted data.
-    
-    This function pulls data from the extract task via XCom,
-    transforms it (multiplies each value by 2), and returns
-    the transformed data.
-    
-    Args:
-        **context: Airflow task context containing task_instance
-    
-    Returns:
-        Dict containing transformed data list
-    """
-    # Access task instance from context
-    ti = context['ti']
-    
-    # Pull data from extract task via XCom
-    extracted_data = ti.xcom_pull(task_ids='extract')
-    print(f"Received data from extract task: {extracted_data}")
-    
-    # Transform data (multiply by 2)
-    original_data = extracted_data['data']
-    transformed = [x * 2 for x in original_data]
-    
-    print(f"Transformed {len(transformed)} records: {transformed}")
-    return {'transformed_data': transformed}
-
-
-def load_data(**context) -> None:
-    """
-    Load transformed data.
-    
-    This function pulls transformed data from the transform task
-    via XCom and simulates loading it to a destination.
-    
-    Args:
-        **context: Airflow task context containing task_instance
-    
-    Returns:
-        None
-    """
-    # Access task instance from context
-    ti = context['ti']
-    
-    # Pull transformed data from transform task via XCom
-    transformed_data = ti.xcom_pull(task_ids='transform')
-    print(f"Received transformed data: {transformed_data}")
-    
-    # Simulate loading data
-    data_to_load = transformed_data['transformed_data']
-    print(f"Loading {len(data_to_load)} records to destination...")
-    print(f"Data loaded successfully: {data_to_load}")
-    
-    # In a real scenario, this would write to database, file, or API
-    return None
-
-
-# Define the DAG
-# Note: Airflow 3.0+ uses 'schedule' instead of 'schedule_interval'
-with DAG(
-    'example_etl_dag',
-    default_args=default_args,
-    description='Example ETL DAG using traditional operators',
-    schedule=timedelta(days=1),  # Changed from schedule_interval for Airflow 3.0+
+@dag(
+    dag_id='example_etl_dag',
+    description='Example ETL DAG using TaskFlow API',
+    schedule=timedelta(days=1),
     start_date=datetime(2025, 1, 1),
     catchup=False,
-    tags=['example', 'etl', 'traditional-operators'],
-) as dag:
+    tags=['example', 'etl', 'taskflow'],
+    default_args={
+        'owner': 'airflow',
+        'depends_on_past': False,
+        'email_on_failure': False,
+        'email_on_retry': False,
+        'retries': 1,
+        'retry_delay': timedelta(minutes=5),
+    },
+)
+def example_etl_dag():
+    """
+    Example ETL DAG using TaskFlow API.
     
-    # Extract task
-    extract = PythonOperator(
-        task_id='extract',
-        python_callable=extract_data,
-        doc_md="""
-        #### Extract Task
-        Extracts sample data from a simulated data source.
-        Returns data via XCom for downstream tasks.
-        """,
-    )
+    This DAG demonstrates the TaskFlow API pattern with automatic
+    XCom management and type hints.
+    """
     
-    # Transform task
-    transform = PythonOperator(
-        task_id='transform',
-        python_callable=transform_data,
-        doc_md="""
-        #### Transform Task
-        Transforms extracted data by multiplying each value by 2.
-        Pulls data from extract task via XCom.
-        """,
-    )
+    @task
+    def extract() -> Dict[str, List[int]]:
+        """
+        Extract data from source.
+        
+        This function simulates extracting data from a data source.
+        In a real scenario, this would connect to a database, API, or file.
+        
+        Returns:
+            Dict containing extracted data list
+        """
+        print("Extracting data from source...")
+        # Simulate extracted data
+        data = [1, 2, 3, 4, 5]
+        print(f"Extracted {len(data)} records: {data}")
+        return {'data': data}
     
-    # Validate task (using BashOperator)
-    validate = BashOperator(
-        task_id='validate',
-        bash_command='echo "Validating transformed data..." && echo "Validation passed"',
-        doc_md="""
-        #### Validate Task
-        Validates the transformed data format.
-        Uses BashOperator to demonstrate bash command execution.
-        """,
-    )
+    @task
+    def transform(data: Dict[str, List[int]]) -> Dict[str, List[int]]:
+        """
+        Transform extracted data.
+        
+        This function receives data from the extract task automatically
+        via TaskFlow API (no manual XCom needed). It transforms the data
+        by multiplying each value by 2.
+        
+        Args:
+            data: Dictionary containing extracted data from extract task
+        
+        Returns:
+            Dict containing transformed data list
+        """
+        print(f"Received data from extract task: {data}")
+        
+        # Transform data (multiply by 2)
+        original_data = data['data']
+        transformed = [x * 2 for x in original_data]
+        
+        print(f"Transformed {len(transformed)} records: {transformed}")
+        return {'transformed_data': transformed}
     
-    # Load task
-    load = PythonOperator(
-        task_id='load',
-        python_callable=load_data,
-        doc_md="""
-        #### Load Task
-        Loads transformed data to destination.
-        Pulls data from transform task via XCom.
-        """,
-    )
+    @task.bash
+    def validate() -> str:
+        """
+        Validate transformed data.
+        
+        This task validates the transformed data format using a bash command.
+        Uses @task.bash decorator for bash command execution.
+        
+        Returns:
+            Bash command string to execute
+        """
+        return 'echo "Validating transformed data..." && echo "Validation passed"'
     
-    # Define task dependencies
-    # extract -> transform -> validate -> load
-    extract >> transform >> validate >> load
+    @task
+    def load(transformed_data: Dict[str, List[int]]) -> None:
+        """
+        Load transformed data.
+        
+        This function receives transformed data from the transform task
+        automatically via TaskFlow API and simulates loading it to a destination.
+        
+        Args:
+            transformed_data: Dictionary containing transformed data from transform task
+        
+        Returns:
+            None
+        """
+        print(f"Received transformed data: {transformed_data}")
+        
+        # Simulate loading data
+        data_to_load = transformed_data['transformed_data']
+        print(f"Loading {len(data_to_load)} records to destination...")
+        print(f"Data loaded successfully: {data_to_load}")
+        
+        # In a real scenario, this would write to database, file, or API
+        return None
+    
+    # Automatic dependency management via function calls
+    # TaskFlow API automatically handles XCom and dependencies
+    extracted = extract()
+    transformed = transform(extracted)
+    validated = validate()
+    loaded = load(transformed)
+    
+    # Set explicit dependencies for validate and load
+    # validate runs after transform (but doesn't need transform's data)
+    # load runs after validate
+    transformed >> validated >> loaded
+
+
+# Invoke the DAG function to register it with Airflow
+example_etl_dag()
 

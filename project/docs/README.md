@@ -15,6 +15,7 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
 - **[Testing Guide](testing-guide-phase1.md)** - Comprehensive testing procedures
   - ✅ **Airflow DAG Tests**: 57 tests passing, 100% coverage (TASK-004 complete)
   - Infrastructure tests, Airflow tests, and testing best practices
+- **[TaskFlow API Guide](taskflow-api-guide.md)** - TaskFlow API implementation guide (TASK-005 complete)
 
 ### Main PRD
 - **[Main PRD](prd.md)** - Complete product requirements document
@@ -48,7 +49,8 @@ docs/
 ├── prd_phase8.md               # Phase 8 PRD (Developer Experience)
 ├── prd_phase9.md               # Phase 9 PRD (Enterprise Features)
 ├── setup-guide.md              # Environment setup guide
-└── testing-guide-phase1.md     # Testing procedures
+├── testing-guide-phase1.md     # Testing procedures
+└── taskflow-api-guide.md       # TaskFlow API implementation guide
 ```
 
 ## Security Requirements
@@ -63,8 +65,8 @@ See security sections in each PRD for details.
   - ✅ TASK-001: Docker Compose Environment Setup (Complete)
   - ✅ TASK-002: Airflow Configuration and Initialization (Complete)
   - ✅ TASK-003: Basic DAG Creation with Traditional Operators (Complete)
-  - ⏳ TASK-004: DAG Validation and Testing (Waiting)
-  - ⏳ TASK-005: Migrate DAGs to TaskFlow API (Waiting)
+  - ✅ TASK-004: DAG Validation and Testing (Complete - 57 tests, 100% coverage)
+  - ✅ TASK-005: Migrate DAGs to TaskFlow API (Complete - TaskFlow API implemented)
 
 ## Contributing
 

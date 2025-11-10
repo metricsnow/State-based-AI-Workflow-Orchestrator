@@ -30,14 +30,17 @@ This directory contains the main project implementation for Phase 1.
 - **Kafka**: localhost:9092 ✅ Verified
 - **PostgreSQL**: Internal (port 5432) ✅ Verified
 
-**Status**: All infrastructure services operational. Airflow initialized with example DAG (`example_etl_dag`).
+**Status**: All infrastructure services operational. Airflow initialized with example DAG (`example_etl_dag`) using TaskFlow API.
 
 ## DAGs
 
-- **example_etl_dag**: Example ETL DAG with traditional operators (PythonOperator, BashOperator)
+- **example_etl_dag**: Example ETL DAG using TaskFlow API (`@dag` and `@task` decorators)
   - Tasks: extract, transform, validate, load
-  - Demonstrates XCom data passing
+  - Uses TaskFlow API for automatic XCom management
+  - Type hints for better IDE support
+  - Automatic dependency management via function calls
   - Located in: `project/dags/example_etl_dag.py`
+  - **Status**: ✅ Migrated to TaskFlow API (TASK-005 complete)
 
 ## Testing
 

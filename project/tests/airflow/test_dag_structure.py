@@ -86,36 +86,37 @@ class TestDAGStructure:
         assert dag.catchup is False, "catchup should be False"
         assert 'example' in dag.tags, "DAG should have 'example' tag"
         assert 'etl' in dag.tags, "DAG should have 'etl' tag"
+        assert 'taskflow' in dag.tags, "DAG should have 'taskflow' tag (TaskFlow API)"
 
     def test_example_etl_dag_task_types(self, dag_bag):
-        """Test that tasks use correct operator types."""
+        """Test that tasks use correct operator types (TaskFlow API)."""
         dag = dag_bag.get_dag(dag_id='example_etl_dag')
         
         extract = dag.get_task('extract')
         transform = dag.get_task('transform')
         load = dag.get_task('load')
         
-        # Check operator types
-        from airflow.operators.python import PythonOperator
-        assert isinstance(extract, PythonOperator), \
-            "extract should be PythonOperator"
-        assert isinstance(transform, PythonOperator), \
-            "transform should be PythonOperator"
-        assert isinstance(load, PythonOperator), \
-            "load should be PythonOperator"
+        # Check operator types - TaskFlow API uses PythonDecoratedOperator
+        from airflow.operators.python import PythonDecoratedOperator
+        assert isinstance(extract, PythonDecoratedOperator), \
+            "extract should be PythonDecoratedOperator (TaskFlow API)"
+        assert isinstance(transform, PythonDecoratedOperator), \
+            "transform should be PythonDecoratedOperator (TaskFlow API)"
+        assert isinstance(load, PythonDecoratedOperator), \
+            "load should be PythonDecoratedOperator (TaskFlow API)"
 
     def test_example_etl_dag_has_bash_operator(self, dag_bag):
-        """Test that DAG includes a BashOperator task."""
+        """Test that DAG includes a BashDecoratedOperator task (TaskFlow API)."""
         dag = dag_bag.get_dag(dag_id='example_etl_dag')
         
         task_ids = [task.task_id for task in dag.tasks]
         
-        # Check if validate task exists (BashOperator)
+        # Check if validate task exists (BashDecoratedOperator for TaskFlow API)
         if 'validate' in task_ids:
             validate = dag.get_task('validate')
-            from airflow.operators.bash import BashOperator
-            assert isinstance(validate, BashOperator), \
-                "validate should be BashOperator"
+            from airflow.operators.bash import BashDecoratedOperator
+            assert isinstance(validate, BashDecoratedOperator), \
+                "validate should be BashDecoratedOperator (TaskFlow API)"
 
     def test_example_etl_dag_default_args(self, dag_bag):
         """Test that DAG has default_args configured."""
