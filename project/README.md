@@ -25,11 +25,19 @@ This directory contains the main project implementation for Phase 1.
 
 ## Services
 
-- **Airflow Webserver**: http://localhost:8080 (requires TASK-002: database initialization)
+- **Airflow Webserver**: http://localhost:8080 ✅ Operational (admin/admin)
+- **Airflow Scheduler**: Running ✅ Operational
 - **Kafka**: localhost:9092 ✅ Verified
 - **PostgreSQL**: Internal (port 5432) ✅ Verified
 
-**Status**: Infrastructure services (PostgreSQL, Zookeeper, Kafka) are operational. Airflow services require database initialization (TASK-002).
+**Status**: All infrastructure services operational. Airflow initialized with example DAG (`example_etl_dag`).
+
+## DAGs
+
+- **example_etl_dag**: Example ETL DAG with traditional operators (PythonOperator, BashOperator)
+  - Tasks: extract, transform, validate, load
+  - Demonstrates XCom data passing
+  - Located in: `project/dags/example_etl_dag.py`
 
 ## Testing
 
@@ -40,6 +48,17 @@ This directory contains the main project implementation for Phase 1.
 source venv/bin/activate
 pip install -r project/tests/infrastructure/requirements-test.txt
 pytest project/tests/infrastructure/ -v
+```
+
+**Airflow DAG tests** (requires Airflow in Docker):
+```bash
+# Run DAG validation tests inside Airflow container
+docker-compose exec -T airflow-webserver python -c "
+from airflow.models import DagBag
+dag_bag = DagBag(dag_folder='/opt/airflow/dags', include_examples=False)
+print('DAGs:', list(dag_bag.dags.keys()))
+print('Import errors:', dag_bag.import_errors)
+"
 ```
 
 **All tests**:

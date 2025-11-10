@@ -101,3 +101,6 @@ venv/
 ENV/
 env/
 
+.coverage
+__pycache__/
+*.pyc

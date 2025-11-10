@@ -174,8 +174,9 @@ docker-compose exec airflow-webserver airflow users list
    - Password: `admin`
 3. **Verify**:
    - No errors in UI
-   - DAGs list is visible (empty initially)
+   - DAGs list is visible (should show `example_etl_dag`)
    - Scheduler is running
+   - Example DAG `example_etl_dag` is available (paused by default)
 
 ⚠️ **Security**: Change the admin password in production!
 
@@ -205,7 +206,8 @@ After setup, your project structure should be:
 │   ├── init-airflow.sh         # Airflow initialization script
 │   └── test-docker-compose.sh
 └── project/
-    ├── dags/                   # Airflow DAGs (empty initially)
+    ├── dags/                   # Airflow DAGs
+    │   └── example_etl_dag.py  # Example ETL DAG (TASK-003)
     ├── logs/                   # Airflow logs
     ├── plugins/                # Airflow plugins
     ├── tests/                  # Test suite
@@ -309,10 +311,27 @@ After successful setup:
 
 1. ✅ **TASK-001 Complete**: Docker Compose environment setup
 2. ✅ **TASK-002 Complete**: Airflow Configuration and Initialization
-3. **TASK-003**: Basic DAG Creation
-4. **TASK-004**: DAG Validation and Testing
+3. ✅ **TASK-003 Complete**: Basic DAG Creation with Traditional Operators
+   - Example DAG `example_etl_dag` is available in Airflow UI
+   - DAG demonstrates ETL pattern with XCom data passing
+   - Located at: `project/dags/example_etl_dag.py`
+4. **TASK-004**: DAG Validation and Testing (Next)
+5. **TASK-005**: Migrate DAGs to TaskFlow API
 
 See `project/dev/tasks/` for task details.
+
+### Testing the Example DAG
+
+After setup, you can test the example DAG:
+
+1. **Access Airflow UI**: http://localhost:8080 (admin/admin)
+2. **Find DAG**: Look for `example_etl_dag` in the DAG list
+3. **Unpause DAG**: Toggle the pause/unpause switch
+4. **Trigger DAG**: Click "Trigger DAG" to run manually
+5. **Monitor Execution**: View task execution in Graph View
+6. **Check Logs**: View task logs and XCom values
+
+For DAG validation tests, see `project/tests/airflow/test_dag_structure.py`.
 
 ## Security Notes
 

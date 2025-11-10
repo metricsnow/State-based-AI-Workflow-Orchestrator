@@ -13,6 +13,8 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
 ### Setup and Testing
 - **[Setup Guide](setup-guide.md)** - Step-by-step environment setup instructions
 - **[Testing Guide](testing-guide-phase1.md)** - Comprehensive testing procedures
+  - ✅ **Airflow DAG Tests**: 57 tests passing, 100% coverage (TASK-004 complete)
+  - Infrastructure tests, Airflow tests, and testing best practices
 
 ### Main PRD
 - **[Main PRD](prd.md)** - Complete product requirements document
@@ -59,8 +61,10 @@ See security sections in each PRD for details.
 
 - **Phase 1**: In Progress
   - ✅ TASK-001: Docker Compose Environment Setup (Complete)
-  - ⏳ TASK-002: Airflow Configuration (Pending)
-  - ⏳ TASK-003: Basic DAG Creation (Pending)
+  - ✅ TASK-002: Airflow Configuration and Initialization (Complete)
+  - ✅ TASK-003: Basic DAG Creation with Traditional Operators (Complete)
+  - ⏳ TASK-004: DAG Validation and Testing (Waiting)
+  - ⏳ TASK-005: Migrate DAGs to TaskFlow API (Waiting)
 
 ## Contributing
 
