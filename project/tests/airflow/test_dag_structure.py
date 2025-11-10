@@ -40,7 +40,8 @@ class TestDAGStructure:
 
     def test_example_etl_dag_structure(self, dag_bag):
         """Test example_etl_dag structure and properties."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         assert dag is not None, "DAG is None"
         assert dag.dag_id == 'example_etl_dag', \
@@ -50,7 +51,8 @@ class TestDAGStructure:
 
     def test_example_etl_dag_tasks(self, dag_bag):
         """Test that example_etl_dag has required tasks."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         task_ids = [task.task_id for task in dag.tasks]
         
@@ -60,7 +62,8 @@ class TestDAGStructure:
 
     def test_example_etl_dag_task_dependencies(self, dag_bag):
         """Test that task dependencies are correctly defined."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         extract = dag.get_task('extract')
         transform = dag.get_task('transform')
@@ -81,7 +84,8 @@ class TestDAGStructure:
 
     def test_example_etl_dag_configuration(self, dag_bag):
         """Test DAG configuration settings."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         assert dag.catchup is False, "catchup should be False"
         assert 'example' in dag.tags, "DAG should have 'example' tag"
@@ -90,37 +94,40 @@ class TestDAGStructure:
 
     def test_example_etl_dag_task_types(self, dag_bag):
         """Test that tasks use correct operator types (TaskFlow API)."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         extract = dag.get_task('extract')
         transform = dag.get_task('transform')
         load = dag.get_task('load')
         
-        # Check operator types - TaskFlow API uses PythonDecoratedOperator
-        from airflow.operators.python import PythonDecoratedOperator
-        assert isinstance(extract, PythonDecoratedOperator), \
-            "extract should be PythonDecoratedOperator (TaskFlow API)"
-        assert isinstance(transform, PythonDecoratedOperator), \
-            "transform should be PythonDecoratedOperator (TaskFlow API)"
-        assert isinstance(load, PythonDecoratedOperator), \
-            "load should be PythonDecoratedOperator (TaskFlow API)"
+        # Check operator types - TaskFlow API uses _PythonDecoratedOperator
+        from airflow.providers.standard.decorators.python import _PythonDecoratedOperator
+        assert isinstance(extract, _PythonDecoratedOperator), \
+            "extract should be _PythonDecoratedOperator (TaskFlow API)"
+        assert isinstance(transform, _PythonDecoratedOperator), \
+            "transform should be _PythonDecoratedOperator (TaskFlow API)"
+        assert isinstance(load, _PythonDecoratedOperator), \
+            "load should be _PythonDecoratedOperator (TaskFlow API)"
 
     def test_example_etl_dag_has_bash_operator(self, dag_bag):
-        """Test that DAG includes a BashDecoratedOperator task (TaskFlow API)."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        """Test that DAG includes a _BashDecoratedOperator task (TaskFlow API)."""
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         task_ids = [task.task_id for task in dag.tasks]
         
-        # Check if validate task exists (BashDecoratedOperator for TaskFlow API)
+        # Check if validate task exists (_BashDecoratedOperator for TaskFlow API)
         if 'validate' in task_ids:
             validate = dag.get_task('validate')
-            from airflow.operators.bash import BashDecoratedOperator
-            assert isinstance(validate, BashDecoratedOperator), \
-                "validate should be BashDecoratedOperator (TaskFlow API)"
+            from airflow.providers.standard.decorators.bash import _BashDecoratedOperator
+            assert isinstance(validate, _BashDecoratedOperator), \
+                "validate should be _BashDecoratedOperator (TaskFlow API)"
 
     def test_example_etl_dag_default_args(self, dag_bag):
         """Test that DAG has default_args configured."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         assert dag.default_args is not None, "default_args should be set"
         assert 'owner' in dag.default_args, "default_args should have 'owner'"
@@ -128,7 +135,8 @@ class TestDAGStructure:
 
     def test_example_etl_dag_task_count(self, dag_bag):
         """Test that DAG has expected number of tasks."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         # Should have at least 4 tasks: extract, transform, validate, load
         assert len(dag.tasks) >= 4, \
@@ -136,7 +144,8 @@ class TestDAGStructure:
 
     def test_example_etl_dag_task_ids_unique(self, dag_bag):
         """Test that all task IDs are unique."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         task_ids = [task.task_id for task in dag.tasks]
         assert len(task_ids) == len(set(task_ids)), \
@@ -144,7 +153,8 @@ class TestDAGStructure:
 
     def test_example_etl_dag_has_no_cycles(self, dag_bag):
         """Test that DAG has no circular dependencies."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         # Airflow DAGs should not have cycles
         # This is validated by checking that all tasks have proper dependencies
@@ -155,7 +165,8 @@ class TestDAGStructure:
 
     def test_example_etl_dag_schedule_interval(self, dag_bag):
         """Test that DAG has a valid schedule."""
-        dag = dag_bag.get_dag(dag_id='example_etl_dag')
+        # Use dag_bag.dags dictionary access instead of get_dag() to avoid database queries
+        dag = dag_bag.dags.get('example_etl_dag')
         
         # Airflow 3.0+ uses 'schedule' instead of 'schedule_interval'
         assert hasattr(dag, 'schedule') or hasattr(dag, 'schedule_interval'), \

@@ -2,6 +2,18 @@
 
 Tests for Docker Compose environment setup and infrastructure components.
 
+## Testing Philosophy
+
+**CRITICAL**: All infrastructure tests run against the **production environment** - **NEVER with placeholders**.
+
+- Tests connect to **real Docker containers** from `docker-compose.yml`
+- Tests validate **actual service health** (PostgreSQL, Kafka, Zookeeper, Airflow)
+- Tests check **real network connectivity** between services
+- Tests verify **actual volume persistence** in production volumes
+- Tests use **real service endpoints** (not mocked)
+
+**No placeholders. No mocks. Production Docker Compose environment only.**
+
 ## Test Files
 
 ### `test_docker_compose.py`

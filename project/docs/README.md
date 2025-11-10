@@ -68,6 +68,20 @@ docs/
 
 See security sections in each PRD for details.
 
+## Testing Philosophy
+
+**CRITICAL**: All tests run against the **production environment** - **NEVER with placeholders or mocks**.
+
+- Tests use **real services** (PostgreSQL, Kafka, Airflow) from `docker-compose.yml`
+- Tests connect to **actual Docker containers** (not mocked)
+- Tests validate **real database connections** (PostgreSQL, not SQLite)
+- Tests interact with **real Kafka brokers** (not in-memory implementations)
+- Tests execute against **real Airflow instances** (not test databases)
+
+**No placeholders. No mocks. Production environment only.**
+
+See [Testing Guide](testing-guide-phase1.md) and [Test Suite README](../tests/README.md) for details.
+
 ## Status
 
 - **Phase 1**: In Progress

@@ -2,6 +2,18 @@
 
 Comprehensive test suite for Airflow DAGs, TaskFlow API, and workflow execution.
 
+## Testing Philosophy
+
+**CRITICAL**: All Airflow tests run against the **production environment** - **NEVER with placeholders**.
+
+- Tests use **real PostgreSQL database** (configured in `docker-compose.yml`)
+- Tests connect to **actual Airflow services** (webserver, scheduler)
+- Tests validate **real DAG structures** (not mocked or stubbed)
+- Tests use `dag_bag.dags` dictionary access to avoid database queries in unit tests
+- Integration tests connect to **real Docker containers**
+
+**No SQLite. No placeholders. Production PostgreSQL environment only.**
+
 ## Test Files
 
 ### `test_dag_imports.py` ✅ Implemented

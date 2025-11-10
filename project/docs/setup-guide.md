@@ -190,6 +190,14 @@ docker-compose ps
 pytest project/tests/infrastructure/ -m integration -v
 ```
 
+**Important**: All tests run against the **production environment** - **NEVER with placeholders or mocks**.
+- Tests use **real Docker containers** from `docker-compose.yml`
+- Tests connect to **actual services** (PostgreSQL, Kafka, Airflow)
+- Tests validate **real database connections** (PostgreSQL, not SQLite)
+- **No placeholders. No mocks. Production environment only.**
+
+See [Testing Guide](testing-guide-phase1.md) for complete testing procedures.
+
 ## Directory Structure
 
 After setup, your project structure should be:

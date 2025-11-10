@@ -2,6 +2,18 @@
 
 Comprehensive pytest-based test suite organized by module for the AI-Powered Workflow Orchestration project.
 
+## Testing Philosophy
+
+**CRITICAL**: All tests run against the **production environment** - **NEVER with placeholders or mocks**.
+
+- Tests connect to **real services** (PostgreSQL, Kafka, Airflow)
+- Tests use **actual Docker containers** from `docker-compose.yml`
+- Tests validate **real database connections** (PostgreSQL, not SQLite)
+- Tests interact with **real Kafka brokers** (not mocked)
+- Tests execute against **real Airflow instances** (not test databases)
+
+**No placeholders. No mocks. Production environment only.**
+
 ## Test Structure
 
 ```

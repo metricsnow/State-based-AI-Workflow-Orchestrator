@@ -6,6 +6,27 @@ This guide provides comprehensive testing procedures for the Docker Compose envi
 
 **Status**: ✅ Testing suite implemented with modular structure
 
+## Testing Philosophy
+
+**CRITICAL**: All tests run against the **production environment** - **NEVER with placeholders or mocks**.
+
+### Core Principles
+
+- **Real Services Only**: Tests connect to actual PostgreSQL, Kafka, Zookeeper, and Airflow services
+- **Production Docker Containers**: Tests use real Docker containers from `docker-compose.yml`
+- **Real Database Connections**: Tests use PostgreSQL (never SQLite or test databases)
+- **Real Kafka Brokers**: Tests interact with actual Kafka brokers (not mocked or in-memory)
+- **Real Airflow Instances**: Tests execute against actual Airflow services (not test databases)
+
+### Why Production Environment?
+
+1. **Accuracy**: Tests validate actual production behavior, not simulated behavior
+2. **Reliability**: Tests catch real integration issues that mocks would miss
+3. **Confidence**: Passing tests guarantee production readiness
+4. **No Surprises**: What works in tests works in production
+
+**No placeholders. No mocks. Production environment only.**
+
 ## Test Suite Structure
 
 The test suite is organized by module in `project/tests/`:

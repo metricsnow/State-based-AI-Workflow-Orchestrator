@@ -2,6 +2,18 @@
 
 Tests for Kafka producers, consumers, and event streaming.
 
+## Testing Philosophy
+
+**CRITICAL**: All Kafka tests run against the **production environment** - **NEVER with placeholders**.
+
+- Tests connect to **real Kafka brokers** (running in Docker containers)
+- Tests use **actual Zookeeper** (not mocked)
+- Tests validate **real event serialization/deserialization** (not stubbed)
+- Tests interact with **real Kafka topics** (not in-memory implementations)
+- Integration tests use **actual Kafka Docker services** from `docker-compose.yml`
+
+**No placeholders. No mocks. Production Kafka environment only.**
+
 ## Test Files
 
 ### `test_events.py` ✅ Complete
