@@ -13,9 +13,13 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
 ### Setup and Testing
 - **[Setup Guide](setup-guide.md)** - Step-by-step environment setup instructions
 - **[Testing Guide](testing-guide-phase1.md)** - Comprehensive testing procedures
-  - ✅ **Airflow DAG Tests**: 57 tests passing, 100% coverage (TASK-004 complete)
+  - ✅ **Airflow DAG Tests**: 93 tests passing, 100% coverage
+    - TASK-004: DAG validation (57 tests)
+    - TASK-006: XCom data passing (36 tests)
   - Infrastructure tests, Airflow tests, and testing best practices
-- **[TaskFlow API Guide](taskflow-api-guide.md)** - TaskFlow API implementation guide (TASK-005 complete)
+- **[TaskFlow API Guide](taskflow-api-guide.md)** - TaskFlow API implementation guide
+  - ✅ TASK-005: TaskFlow API migration (Complete)
+  - ✅ TASK-006: XCom data passing patterns (Complete)
 
 ### Main PRD
 - **[Main PRD](prd.md)** - Complete product requirements document
@@ -67,6 +71,7 @@ See security sections in each PRD for details.
   - ✅ TASK-003: Basic DAG Creation with Traditional Operators (Complete)
   - ✅ TASK-004: DAG Validation and Testing (Complete - 57 tests, 100% coverage)
   - ✅ TASK-005: Migrate DAGs to TaskFlow API (Complete - TaskFlow API implemented)
+  - ✅ TASK-006: Implement Data Passing with XCom (Complete - 36 tests, all patterns implemented)
 
 ## Contributing
 

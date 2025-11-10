@@ -194,9 +194,158 @@ assert isinstance(dag.get_task('extract'), PythonDecoratedOperator)
 - **MCP Context7**: `/apache/airflow` - Official Airflow documentation
 - **Task File**: `project/dev/tasks/TASK-005.md` - Complete migration details
 
+## XCom Data Passing Patterns (TASK-006)
+
+**Status**: ✅ Complete - Comprehensive XCom data passing patterns implemented
+
+### Overview
+
+TaskFlow API automatically handles XCom serialization and deserialization, making data passing between tasks seamless. The `xcom_data_passing_dag` demonstrates all data passing patterns.
+
+### Data Passing Patterns
+
+#### 1. Simple Value Passing
+
+Pass simple types (int, str, float) between tasks:
+
+```python
+@task
+def extract_simple_value() -> int:
+    return 42
+
+@task
+def process_simple_value(value: int) -> int:
+    return value * 2
+
+# Automatic data passing
+simple_value = extract_simple_value()
+processed = process_simple_value(simple_value)
+```
+
+#### 2. Dictionary Passing
+
+Pass dictionary data structures:
+
+```python
+@task
+def extract_dict() -> Dict[str, List[int]]:
+    return {"data": [1, 2, 3, 4, 5]}
+
+@task
+def transform_dict(data: Dict[str, List[int]]) -> Dict[str, List[int]]:
+    return {"transformed": [x * 2 for x in data["data"]]}
+
+# Automatic data passing
+dict_data = extract_dict()
+transformed = transform_dict(dict_data)
+```
+
+#### 3. List Passing
+
+Pass list data structures:
+
+```python
+@task
+def extract_list() -> List[int]:
+    return [10, 20, 30, 40, 50]
+
+@task
+def transform_list(data: List[int]) -> List[int]:
+    return [x * x for x in data]
+
+# Automatic data passing
+list_data = extract_list()
+transformed = transform_list(list_data)
+```
+
+#### 4. Multiple Outputs
+
+Return multiple values using `multiple_outputs=True`:
+
+```python
+@task(multiple_outputs=True)
+def extract_multiple() -> Dict[str, Any]:
+    return {
+        "count": 100,
+        "data": [1, 2, 3],
+        "status": "success",
+        "metadata": {"version": "1.0"}
+    }
+
+@task
+def process_multiple(
+    count: int,
+    data: List[int],
+    status: str,
+    metadata: Dict[str, str]
+) -> Dict[str, Any]:
+    return {"processed": True, "total": count * len(data)}
+
+# Multiple outputs are unpacked automatically
+multiple_data = extract_multiple()
+processed = process_multiple(
+    count=multiple_data["count"],
+    data=multiple_data["data"],
+    status=multiple_data["status"],
+    metadata=multiple_data["metadata"]
+)
+```
+
+#### 5. Data Validation
+
+Validate data structure and content:
+
+```python
+@task
+def validate_data(data: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(data, dict):
+        raise ValueError("Data must be a dictionary")
+    if "data" not in data:
+        raise ValueError("Data must contain 'data' key")
+    return data
+
+# Validation with error handling
+validated = validate_data(extracted_data)
+```
+
+#### 6. Error Handling
+
+Handle invalid data gracefully:
+
+```python
+@task
+def handle_invalid_data(data: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        if "data" not in data:
+            return {"error": True, "message": "Missing required 'data' key"}
+        return {"error": False, "processed": True, "data": data}
+    except Exception as e:
+        return {"error": True, "message": str(e)}
+```
+
+### XCom Limitations
+
+- **Size Limit**: Default 48KB per XCom value
+- **Best Practice**: Use external storage (S3, database) for large data
+- **Recommendation**: Keep XCom for metadata and data pointers
+
+### Testing XCom Data Passing
+
+All data passing patterns are tested in `test_xcom_data_passing.py`:
+
+```bash
+pytest project/tests/airflow/test_xcom_data_passing.py -v
+```
+
+**Test Results**: ✅ 36/36 tests passing
+
+### Example DAG
+
+See `project/dags/xcom_data_passing_dag.py` for complete implementation of all patterns.
+
 ## Next Steps
 
-- TASK-006: Implement Data Passing with XCom (enhance TaskFlow DAGs)
+- ✅ TASK-006: Implement Data Passing with XCom - **COMPLETE**
 - TASK-007: Unit Tests for TaskFlow DAGs
 - TASK-008: Integration Testing for TaskFlow DAGs
 

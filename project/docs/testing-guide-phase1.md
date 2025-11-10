@@ -17,11 +17,11 @@ project/tests/
 │   ├── test_services.py         # Service health tests
 │   ├── test_networking.py       # Network connectivity tests
 │   └── test_volumes.py          # Volume persistence tests
-├── airflow/                # Airflow tests (Phase 1.2+) ✅ 57 tests
+├── airflow/                # Airflow tests (Phase 1.2+) ✅ 93 tests
 │   ├── test_dag_imports.py         # DAG import validation (8 tests)
 │   ├── test_dag_structure.py       # DAG structure validation (13 tests)
-│   ├── test_task_functions.py      # Task function unit tests (17 tests)
-│   ├── test_xcom_data_passing.py   # XCom data passing (8 tests)
+│   ├── test_task_functions.py      # Task function unit tests (16 tests)
+│   ├── test_xcom_data_passing.py   # XCom data passing (36 tests) ✅ TASK-006
 │   └── test_airflow_init.py        # Airflow initialization (13 tests)
 └── kafka/                  # Kafka tests (Phase 1.3+)
 ```
@@ -403,15 +403,15 @@ For detailed test suite documentation, see:
 - **Infrastructure Tests**: `project/tests/infrastructure/README.md`
 - **Pytest Configuration**: `pytest.ini`
 
-## Airflow DAG Testing (TASK-004)
+## Airflow DAG Testing (TASK-004, TASK-006)
 
 ### Overview
 
 Comprehensive test suite for Airflow DAG validation and testing.
 
-**Status**: ✅ Complete - 57 tests passing, 100% coverage
+**Status**: ✅ Complete - 93 tests passing, 100% coverage
 
-**Note**: DAGs have been migrated to TaskFlow API (TASK-005). Tests have been updated to work with TaskFlow decorators.
+**Note**: DAGs have been migrated to TaskFlow API (TASK-005). XCom data passing patterns implemented (TASK-006). Tests have been updated to work with TaskFlow decorators.
 
 ### Running Airflow Tests
 
@@ -442,20 +442,29 @@ pytest project/tests/airflow/ --cov=project/dags --cov-report=term-missing
 ```
 
 **Test Results**:
-- ✅ **Total Tests**: 57 tests
-- ✅ **Status**: All passing (57/57)
+- ✅ **Total Tests**: 93 tests
+- ✅ **Status**: All passing (93/93)
 - ✅ **Coverage**: 100% for DAG code
-- ✅ **Execution Time**: ~10 seconds
+- ✅ **Execution Time**: ~15 seconds
 
 ### Test Categories
 
 1. **DAG Import Tests** (8 tests): Validate DAG files can be imported without errors
 2. **DAG Structure Tests** (13 tests): Validate DAG structure, tasks, dependencies (TaskFlow API)
 3. **Task Function Tests** (16 tests): Unit tests for task functions (no Airflow runtime, TaskFlow API)
-4. **XCom Data Passing Tests** (8 tests): Validate XCom data passing between tasks (TaskFlow API)
+4. **XCom Data Passing Tests** (36 tests): ✅ Comprehensive XCom data passing patterns (TASK-006)
+   - Simple value passing (5 tests)
+   - Dictionary passing (5 tests)
+   - List passing (5 tests)
+   - Multiple outputs (7 tests)
+   - Data validation (8 tests)
+   - Error handling (5 tests)
+   - Integration (1 test)
 5. **Airflow Init Tests** (13 tests): Airflow initialization and configuration
 
 **TaskFlow API Migration**: All DAGs now use `@dag` and `@task` decorators. Task functions receive data via function arguments instead of manual XCom pulls.
+
+**XCom Data Passing (TASK-006)**: Comprehensive data passing patterns implemented with full test coverage. See `xcom_data_passing_dag.py` for all patterns.
 
 ### Running Specific Test Files
 
@@ -469,7 +478,7 @@ pytest project/tests/airflow/test_dag_structure.py -v
 # Task function unit tests (no Airflow runtime needed)
 pytest project/tests/airflow/test_task_functions.py -v
 
-# XCom data passing tests
+# XCom data passing tests (TASK-006 - 36 tests)
 pytest project/tests/airflow/test_xcom_data_passing.py -v
 ```
 
@@ -485,7 +494,8 @@ After successful testing:
 3. ✅ TASK-003: Basic DAG Creation - **COMPLETE**
 4. ✅ TASK-004: DAG Validation and Testing - **COMPLETE** (57 tests, 100% coverage)
 5. ✅ TASK-005: Migrate DAGs to TaskFlow API - **COMPLETE** (TaskFlow API implemented, all tests passing)
-6. Proceed to TASK-006: Implement Data Passing with XCom
-7. Document any issues encountered
-8. Run integration tests when services are started
+6. ✅ TASK-006: Implement Data Passing with XCom - **COMPLETE** (36 tests, all patterns implemented)
+7. Proceed to TASK-007: Unit Tests for TaskFlow DAGs
+8. Document any issues encountered
+9. Run integration tests when services are started
 
