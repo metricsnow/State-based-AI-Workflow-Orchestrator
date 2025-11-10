@@ -590,6 +590,50 @@ An AI-powered workflow orchestration system that provides:
 - **Network Security**: Kubernetes network policies
 - **Secrets Management**: Secure storage for API keys and credentials
 
+### Credential Management - MANDATORY
+
+**ALL credentials MUST be stored in `.env` file. This is a MANDATORY security requirement for all phases.**
+
+#### Requirements
+- **ALL API keys, database credentials, secret keys, tokens, and passwords MUST be in `.env` file only**
+- **NEVER hardcode credentials in source code**
+- **NEVER commit `.env` file to version control** (must be in `.gitignore`)
+- **Always use environment variables loaded from `.env` file**
+- **Create `.env.example` file with placeholder values as template**
+- **Document all required environment variables in documentation**
+
+#### Credential Types That Must Be in `.env`:
+- Airflow FERNET_KEY
+- Database passwords (PostgreSQL, MongoDB, etc.)
+- Kafka connection strings
+- LLM API keys (OpenAI, Anthropic, etc.)
+- Ollama configuration
+- FastAPI secret keys
+- OAuth2 client secrets
+- Any other sensitive configuration
+
+#### Implementation Pattern:
+```python
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access credentials from environment
+FERNET_KEY = os.getenv('FERNET_KEY')
+DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+```
+
+#### Validation:
+- Code review must verify no hardcoded credentials
+- All credential access must use `os.getenv()` or similar
+- `.env.example` must list all required variables
+- Documentation must specify all required environment variables
+- This requirement applies to ALL phases of the project
+
 ### Reliability Requirements
 - **Uptime**: 99.9% availability target
 - **Fault Tolerance**: Automatic retry and recovery
