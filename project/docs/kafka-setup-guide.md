@@ -243,8 +243,37 @@ For production deployments, consider:
 5. **Persistence**: Configure proper volume mounts for data retention
 6. **Resource Limits**: Set appropriate CPU and memory limits
 
+## Using the Producer
+
+Once Kafka is running, you can use the `WorkflowEventProducer` to publish events:
+
+```python
+from workflow_events import (
+    WorkflowEventProducer,
+    WorkflowEvent,
+    EventType,
+    EventSource,
+    WorkflowEventPayload,
+    WorkflowEventMetadata,
+)
+
+with WorkflowEventProducer(bootstrap_servers="localhost:9092") as producer:
+    event = WorkflowEvent(
+        event_type=EventType.WORKFLOW_COMPLETED,
+        source=EventSource.AIRFLOW,
+        workflow_id="example_dag",
+        workflow_run_id="run_123",
+        payload=WorkflowEventPayload(data={"status": "success"}),
+        metadata=WorkflowEventMetadata(environment="dev"),
+    )
+    producer.publish_event(event)
+```
+
+See the [Kafka Producer Guide](kafka-producer-guide.md) for detailed usage.
+
 ## Related Documentation
 
+- [Kafka Producer Guide](kafka-producer-guide.md) - Producer usage and configuration
 - [Event Schema Guide](event-schema-guide.md) - Event schema definition
 - [PRD Phase 1](prd_phase1.md) - Overall architecture and requirements
 - [Testing Guide](testing-guide-phase1.md) - Testing procedures

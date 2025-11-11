@@ -26,6 +26,12 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
 - **[Event Schema Guide](event-schema-guide.md)** - Workflow event schema documentation
   - ✅ TASK-010: Event Schema Definition (Complete)
   - Pydantic models, validation, serialization, and JSON schema generation
+- **[Kafka Producer Guide](kafka-producer-guide.md)** - Kafka producer usage and configuration
+  - ✅ TASK-011: Kafka Producer Implementation (Complete)
+  - Producer class, event publishing, error handling, connection management
+- **[Kafka Setup Guide](kafka-setup-guide.md)** - Kafka infrastructure setup
+  - ✅ TASK-009: Kafka Docker Setup (Complete)
+  - Zookeeper and Kafka configuration, troubleshooting
 
 ### Main PRD
 - **[Main PRD](prd.md)** - Complete product requirements document
@@ -61,7 +67,9 @@ docs/
 ├── setup-guide.md              # Environment setup guide
 ├── testing-guide-phase1.md     # Testing procedures
 ├── taskflow-api-guide.md       # TaskFlow API implementation guide
-└── event-schema-guide.md       # Event schema documentation (TASK-010)
+├── event-schema-guide.md       # Event schema documentation (TASK-010)
+├── kafka-producer-guide.md     # Kafka producer usage guide (TASK-011)
+└── kafka-setup-guide.md        # Kafka infrastructure setup (TASK-009)
 ```
 
 ## Security Requirements
@@ -94,8 +102,10 @@ See [Testing Guide](testing-guide-phase1.md) and [Test Suite README](../tests/RE
   - ✅ TASK-005: Migrate DAGs to TaskFlow API (Complete - TaskFlow API implemented)
   - ✅ TASK-006: Implement Data Passing with XCom (Complete - 36 tests, all patterns implemented)
   - ✅ TASK-007: Unit Tests for TaskFlow DAGs (Complete - 62 tests, 97% coverage)
+  - ✅ TASK-008: Integration Testing for TaskFlow DAGs (Complete - 13 tests)
   - ✅ TASK-009: Kafka Docker Setup (Complete)
   - ✅ TASK-010: Event Schema Definition (Complete - 26 tests, Pydantic models, JSON schema)
+  - ✅ TASK-011: Kafka Producer Implementation (Complete - 17 tests, producer class, error handling)
 
 ## Contributing
 

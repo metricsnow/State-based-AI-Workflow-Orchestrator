@@ -295,9 +295,29 @@ Tests cover:
 5. **Document payload structure**: Document expected payload structure for each event type
 6. **Test serialization**: Ensure events serialize correctly for Kafka
 
+## Publishing Events to Kafka
+
+Once you've created a `WorkflowEvent`, you can publish it to Kafka using the `WorkflowEventProducer`:
+
+```python
+from workflow_events import WorkflowEventProducer
+
+# Create producer
+producer = WorkflowEventProducer(bootstrap_servers="localhost:9092")
+
+# Publish event
+success = producer.publish_event(event)
+
+# Close producer
+producer.close()
+```
+
+For more details, see the [Kafka Producer Guide](kafka-producer-guide.md).
+
 ## References
 
 - [Pydantic Documentation](https://docs.pydantic.dev/)
+- [Kafka Producer Guide](kafka-producer-guide.md) - Producer usage and configuration
 - [PRD Phase 1 - Event Schema](prd_phase1.md#event-schema)
 - [Task 010: Event Schema Definition](../dev/tasks/TASK-010.md)
 
