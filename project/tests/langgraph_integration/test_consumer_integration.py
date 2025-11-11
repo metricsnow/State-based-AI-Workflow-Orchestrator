@@ -66,11 +66,22 @@ class TestConsumerIntegration:
         self, consumer_config, kafka_bootstrap_servers
     ):
         """Test consumer processes WORKFLOW_TRIGGERED events from Kafka."""
+        import sys
+        import time
+        
+        def print_status(msg: str):
+            timestamp = time.strftime("%H:%M:%S", time.localtime())
+            print(f"[{timestamp}] TEST: {msg}", file=sys.stderr, flush=True)
+        
+        print_status("TEST START: test_consumer_processes_workflow_event")
+        
         # Create and publish test event
+        print_status("STEP 1: Creating event producer")
         producer = WorkflowEventProducer(
             bootstrap_servers=kafka_bootstrap_servers
         )
         
+        print_status("STEP 2: Creating WorkflowEvent")
         event = WorkflowEvent(
             event_type=EventType.WORKFLOW_TRIGGERED,
             source=EventSource.AIRFLOW,
@@ -81,14 +92,19 @@ class TestConsumerIntegration:
             ),
             metadata=WorkflowEventMetadata(environment="dev", version="1.0"),
         )
+        print_status(f"STEP 3: Event created with ID: {event.event_id}")
         
         # Publish event (synchronous)
+        print_status(f"STEP 4: Publishing event to topic: {consumer_config.topic}")
         success = producer.publish_event(event, topic=consumer_config.topic)
+        print_status(f"STEP 5: Event published, success={success}")
         assert success is True
         
+        print_status("STEP 6: Closing producer")
         producer.close()
         
         # Start consumer and process event
+        print_status("STEP 7: Creating consumer")
         consumer = LangGraphKafkaConsumer(config=consumer_config)
         processed_events = []
         
@@ -96,40 +112,58 @@ class TestConsumerIntegration:
         original_process = consumer.processor.process_workflow_event
         
         async def capture_process(event):
+            print_status(f"CAPTURE: Processing event {event.event_id}")
             result = await original_process(event)
             processed_events.append(event.event_id)
+            print_status(f"CAPTURE: Event {event.event_id} processed, total={len(processed_events)}")
             return result
         
         consumer.processor.process_workflow_event = capture_process
         
         try:
+            print_status("STEP 8: Starting consumer")
             await consumer.start()
+            print_status(f"STEP 9: Consumer started, running={consumer.running}")
             
             # Consume for a short time to process the event
+            print_status("STEP 10: Creating consume_and_process task")
             consume_task = asyncio.create_task(consumer.consume_and_process())
+            print_status("STEP 11: Consume task created, waiting for events...")
             
             # Wait for event to be processed (with timeout)
-            for _ in range(10):  # Wait up to 5 seconds
+            for i in range(10):  # Wait up to 5 seconds
+                print_status(f"STEP 12.{i+1}: Waiting... (processed={len(processed_events)})")
                 await asyncio.sleep(0.5)
                 if processed_events:
+                    print_status(f"STEP 13: Event processed! Total: {len(processed_events)}")
                     break
             
             # Cancel consumption
+            print_status("STEP 14: Stopping consumer (setting running=False)")
             consumer.running = False
+            print_status("STEP 15: Cancelling consume task")
             consume_task.cancel()
             try:
+                print_status("STEP 16: Waiting for task cancellation")
                 await consume_task
+                print_status("STEP 17: Task cancelled")
             except asyncio.CancelledError:
+                print_status("STEP 17: Task cancellation caught (expected)")
                 pass
             
             # Verify event was processed
-            assert len(processed_events) > 0
+            print_status(f"STEP 18: Verifying results. Processed: {len(processed_events)}")
+            assert len(processed_events) > 0, f"No events processed. Processed: {processed_events}"
             assert event.event_id in processed_events or str(event.event_id) in [
                 str(eid) for eid in processed_events
             ]
+            print_status("STEP 19: Verification passed")
         
         finally:
+            print_status("STEP 20: Stopping consumer in finally")
             await consumer.stop()
+            print_status("STEP 21: Consumer stopped")
+        print_status("TEST COMPLETE: test_consumer_processes_workflow_event")
 
     @pytest.mark.asyncio
     async def test_consumer_handles_multiple_events(

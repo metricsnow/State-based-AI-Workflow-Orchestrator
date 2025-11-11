@@ -16,6 +16,14 @@ The LangGraph Kafka integration provides an async Kafka consumer service that co
   - Event-to-state conversion
   - Result publishing integration
   - 7 processor unit tests, all passing
+- ✅ **TASK-031: Error Handling and Retry Mechanisms (Complete)**
+  - Retry utility with exponential backoff and jitter
+  - Dead letter queue for failed events
+  - Error classification (transient vs permanent)
+  - Comprehensive error handling integration
+  - 13 retry unit tests, all passing
+  - 8 DLQ unit tests, all passing
+  - Integration tests with failure scenarios
 - **CRITICAL**: All tests use production conditions - no mocks, no placeholders
 
 ## Architecture
@@ -69,7 +77,9 @@ project/langgraph_integration/
 ├── __init__.py          # Module exports
 ├── config.py            # Configuration management
 ├── processor.py         # Event-to-state conversion and workflow execution
-├── consumer.py          # Async Kafka consumer
+├── consumer.py          # Async Kafka consumer with retry and DLQ
+├── retry.py             # Retry utility with exponential backoff
+├── dead_letter.py       # Dead letter queue producer
 └── service.py           # Service entry point
 ```
 
@@ -170,10 +180,11 @@ await consumer.stop()
 
 **Features**:
 - Async/await pattern using `aiokafka`
-- Non-blocking event processing
+- Non-blocking event processing with timeout-based polling
 - Concurrent workflow execution
 - Error handling that doesn't stop consumer
-- Graceful shutdown support
+- Graceful shutdown support with timeout protection
+- Cancellation support - consumer can be stopped cleanly without hanging
 
 ### Service Entry Point
 
@@ -252,17 +263,28 @@ python -m langgraph_integration.service
 
 ### 1. Event Consumption
 
-The consumer subscribes to the `workflow-events` topic and consumes events asynchronously:
+The consumer subscribes to the `workflow-events` topic and consumes events asynchronously using timeout-based polling:
 
 ```python
-async for message in consumer:
-    event_data = message.value
-    event = WorkflowEvent(**event_data)
+# Internal implementation uses getmany() with timeout for cancellation support
+while consumer.running:
+    messages = await consumer.getmany(timeout_ms=1000, max_records=10)
     
-    if event.event_type == EventType.WORKFLOW_TRIGGERED:
-        # Process event asynchronously
-        asyncio.create_task(process_workflow_event(event))
+    for topic_partition, partition_messages in messages.items():
+        for message in partition_messages:
+            event_data = message.value
+            event = WorkflowEvent(**event_data)
+            
+            if event.event_type == EventType.WORKFLOW_TRIGGERED:
+                # Process event asynchronously
+                asyncio.create_task(process_workflow_event(event))
 ```
+
+**Key Implementation Details**:
+- Uses `getmany()` with 1-second timeout instead of `async for` to allow cancellation checks
+- Checks `consumer.running` flag between message fetches
+- Prevents indefinite blocking when stopping the consumer
+- Supports clean cancellation via `consumer.running = False`
 
 ### 2. Event-to-State Conversion
 
@@ -305,34 +327,169 @@ result = await asyncio.to_thread(
 )
 ```
 
-## Error Handling
+## Error Handling and Retry Mechanisms
+
+The LangGraph Kafka integration includes comprehensive error handling with retry mechanisms, exponential backoff, and a dead letter queue for failed events.
+
+### Retry Mechanism
+
+The consumer uses an exponential backoff retry mechanism for transient errors:
+
+```python
+from langgraph_integration.retry import RetryConfig, retry_async
+
+# Default retry configuration
+config = RetryConfig(
+    max_retries=3,           # Maximum retry attempts
+    initial_delay=1.0,        # Initial delay in seconds
+    max_delay=60.0,          # Maximum delay cap
+    exponential_base=2.0,    # Exponential backoff base
+    jitter=True              # Add random jitter to avoid thundering herd
+)
+
+# Retry async function with exponential backoff
+result = await retry_async(
+    processor.process_workflow_event,
+    event,
+    config=config
+)
+```
+
+**Error Classification**:
+- **Transient Errors** (retried): `ConnectionError`, `TimeoutError`, `OSError`, `asyncio.TimeoutError`, Kafka-specific timeout/connection errors
+- **Permanent Errors** (not retried): `ValueError`, `TypeError`, `KeyError`, and other non-retryable errors
+
+### Dead Letter Queue
+
+Failed events that cannot be processed after retries are sent to a dead letter queue:
+
+```python
+from langgraph_integration.dead_letter import DeadLetterQueue
+
+# Initialize DLQ
+dlq = DeadLetterQueue(
+    bootstrap_servers="localhost:9092",
+    topic="workflow-events-dlq"  # Default: workflow-events-dlq
+)
+
+# Start DLQ producer
+await dlq.start()
+
+# Publish failed event
+await dlq.publish_failed_event(
+    original_event=event.model_dump(mode="json"),
+    error=exception,
+    retry_count=3,
+    context={"workflow_id": "test-workflow"}
+)
+
+# Stop DLQ producer
+await dlq.stop()
+```
+
+**DLQ Event Structure**:
+```python
+{
+    "dlq_id": "uuid",
+    "timestamp": "2025-01-27T12:00:00Z",
+    "original_event": {...},  # Original workflow event
+    "error": {
+        "type": "ConnectionError",
+        "message": "Connection failed",
+        "traceback": None
+    },
+    "retry_count": 3,
+    "context": {
+        "workflow_id": "test-workflow",
+        "workflow_run_id": "test-run-123"
+    }
+}
+```
 
 ### Consumer Error Handling
 
-The consumer handles errors gracefully without stopping:
+The consumer automatically integrates retry and DLQ mechanisms:
 
 ```python
-try:
-    event = WorkflowEvent(**event_data)
-    if event.event_type == EventType.WORKFLOW_TRIGGERED:
-        asyncio.create_task(process_workflow_event(event))
-except Exception as e:
-    # Log error but continue processing other messages
-    logger.error(f"Error processing message: {e}", exc_info=True)
-    # Continue processing - don't stop consumer
+# Consumer automatically uses retry and DLQ
+consumer = LangGraphKafkaConsumer(config=config)
+
+# Start consumer (starts DLQ producer automatically)
+await consumer.start()
+
+# Process events with automatic retry and DLQ
+# - Transient errors are retried with exponential backoff
+# - Permanent errors fail immediately
+# - Failed events after retries are sent to DLQ
+# - Error results are published to result topic
+await consumer.consume_and_process()
+
+# Stop consumer (stops DLQ producer automatically)
+await consumer.stop()
 ```
+
+**Error Handling Flow**:
+1. Event processing attempts with retry mechanism
+2. Transient errors trigger exponential backoff retries
+3. Permanent errors fail immediately (no retries)
+4. After max retries exceeded, event is sent to DLQ
+5. Error result is published to result topic
+6. Consumer continues processing other events
 
 ### Workflow Error Handling
 
-Workflow execution errors are logged but don't stop the consumer:
+Workflow execution errors are handled with retry and DLQ:
 
 ```python
 try:
-    result = await processor.process_workflow_event(event)
+    # Retry with exponential backoff
+    result = await retry_async(
+        processor.process_workflow_event,
+        event,
+        config=retry_config
+    )
 except Exception as e:
-    logger.error(f"Error processing workflow event: {e}", exc_info=True)
-    # Don't re-raise - allow consumer to continue
+    # Publish to dead letter queue
+    await dlq.publish_failed_event(
+        original_event=event.model_dump(mode="json"),
+        error=e,
+        retry_count=retry_config.max_retries,
+        context={"workflow_id": event.workflow_id}
+    )
+    
+    # Publish error result
+    await result_producer.publish_result(
+        correlation_id=event.event_id,
+        workflow_id=event.workflow_id,
+        workflow_run_id=event.workflow_run_id,
+        result={},
+        status="error",
+        error=f"Processing failed after retries: {str(e)}"
+    )
 ```
+
+### Configuration
+
+**Environment Variables**:
+- `KAFKA_DLQ_TOPIC`: Dead letter queue topic name (default: `workflow-events-dlq`)
+- `KAFKA_BOOTSTRAP_SERVERS`: Kafka broker addresses (default: `localhost:9092`)
+
+**Retry Configuration**:
+- Default: 3 retries with exponential backoff (1s, 2s, 4s delays)
+- Configurable via `RetryConfig` class
+- Jitter enabled by default to avoid thundering herd problem
+
+### Monitoring and Alerting
+
+**DLQ Monitoring**:
+- Monitor DLQ topic size for patterns indicating systemic issues
+- Alert on high DLQ volume
+- Investigate DLQ events for root cause analysis
+
+**Error Metrics**:
+- Track retry counts and success rates
+- Monitor error types and frequencies
+- Alert on high error rates
 
 ## Testing
 
@@ -353,10 +510,23 @@ pytest tests/langgraph_integration/test_consumer_integration.py -v
 - **Configuration Tests**: 4 tests (defaults, environment variables, overrides)
 - **Consumer Tests**: 6 tests (initialization, start/stop, event processing)
 - **Integration Tests**: 4 tests (real Kafka, event processing, multiple events)
-- **Processor Tests**: 6 tests (event-to-state conversion, workflow execution)
-- **Total**: 22 tests, all passing
+- **Processor Tests**: 7 tests (event-to-state conversion, workflow execution)
+- **Result Producer Tests**: 11 tests (initialization, publishing, error handling)
+- **Retry Utility Tests**: 13 tests (retry logic, exponential backoff, error classification)
+- **Dead Letter Queue Tests**: 8 tests (DLQ publishing, error handling, configuration)
+- **Error Handling Integration Tests**: 6 tests (retry integration, DLQ integration, failure scenarios)
+- **Result Integration Tests**: 3 tests (end-to-end result flow)
+- **Total**: 62 tests, all passing with production conditions
 
 **CRITICAL**: All tests use production conditions - no mocks, no placeholders.
+
+**Debugging Support**: All tests include detailed status printing for debugging. Status prints use the format `[HH:MM:SS] TYPE: message` where TYPE is:
+- `TEST:` - Test execution steps
+- `CONSUMER:` - Consumer loop activity  
+- `STOP:` - Stop sequence steps
+- `CAPTURE:` - Event processing capture
+
+Status prints are written to stderr and flushed immediately for real-time visibility during test execution.
 
 ## Configuration
 
@@ -428,13 +598,33 @@ except Exception as e:
 
 ### 3. Graceful Shutdown
 
-Always stop the consumer gracefully:
+Always stop the consumer gracefully. The `stop()` method includes timeout protection to prevent infinite hangs:
 
 ```python
-# ✅ Good: Graceful shutdown
+# ✅ Good: Graceful shutdown with timeout protection
 try:
     await consumer.start()
     await consumer.consume_and_process()
+finally:
+    # stop() has built-in 5-second timeout to prevent infinite offset-commit retries
+    await consumer.stop()
+
+# ✅ Good: Manual cancellation support
+try:
+    await consumer.start()
+    consume_task = asyncio.create_task(consumer.consume_and_process())
+    
+    # ... do other work ...
+    
+    # Stop consumer cleanly
+    consumer.running = False
+    consume_task.cancel()
+    try:
+        await consume_task
+    except asyncio.CancelledError:
+        pass
+    
+    await consumer.stop()
 finally:
     await consumer.stop()
 
@@ -443,6 +633,12 @@ await consumer.start()
 await consumer.consume_and_process()
 # Consumer not stopped - resources leaked
 ```
+
+**Shutdown Features**:
+- **Timeout Protection**: `stop()` has a 5-second timeout to prevent infinite hangs on offset commits
+- **Force Close Fallback**: If timeout occurs, consumer is force-closed after 2 seconds
+- **Resource Cleanup**: Ensures DLQ producer, result producer, and consumer are all stopped
+- **Cancellation Support**: Setting `consumer.running = False` allows clean cancellation of `consume_and_process()`
 
 ### 4. Configuration Management
 
@@ -882,10 +1078,13 @@ The LangGraph Kafka integration provides:
 - ✅ Concurrent workflow execution
 - ✅ Error handling that doesn't stop consumer
 - ✅ Checkpointing preserved (uses event_id as thread_id)
-- ✅ Graceful shutdown support
+- ✅ Graceful shutdown support with timeout protection
+- ✅ Cancellation support - consumer can be stopped without hanging
+- ✅ Timeout-based polling prevents indefinite blocking
 - ✅ Configuration via environment variables
 - ✅ Production-ready service lifecycle
-- ✅ Comprehensive test coverage (40+ tests, all passing)
+- ✅ Comprehensive test coverage (62+ tests, all passing)
+- ✅ Detailed status printing for debugging and monitoring
 
 **Status**: Production-ready for event-driven LangGraph workflow execution with complete Airflow integration.
 

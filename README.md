@@ -12,10 +12,10 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 - **TaskFlow API**: Modern Airflow DAG development with automatic XCom management and type hints
 - **Event-Driven Architecture**: Decoupled components communicate via Kafka events for scalability
 - **Type Safety**: Comprehensive type hints and Pydantic validation for runtime safety
-- **Test Coverage**: 97% code coverage for Phase 1, 100% code coverage for LangGraph workflows with 323+ tests covering all components (176 Phase 1 + 125 LangGraph + 22 LangGraph-Kafka integration)
+- **Test Coverage**: 97% code coverage for Phase 1, 100% code coverage for LangGraph workflows with 350+ tests covering all components (176 Phase 1 + 125 LangGraph + 49 LangGraph-Kafka integration including error handling)
 - **Containerization**: Docker Compose for consistent development and deployment environments
 - **Documentation**: Comprehensive guides for all components with code examples
-- **Error Handling**: Graceful degradation - Kafka failures don't break Airflow tasks
+- **Error Handling**: Comprehensive retry mechanisms with exponential backoff, dead letter queue for failed events, error classification (transient vs permanent), and graceful degradation - Kafka failures don't break Airflow tasks
 - **Code Quality**: PEP8 compliance, docstrings, and modular architecture
 
 ## Technology Stack Overview
@@ -70,7 +70,7 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 - **Why**: Industry-standard framework for building stateful AI agent workflows
 - **Purpose**: Enables stateful multi-agent workflows with checkpointing and state management
 - **Key Features**: StateGraph, reducers, checkpointing, conditional routing
-- **Status**: State definitions, workflows, conditional routing, checkpointing, multi-agent workflows, async Kafka consumer integration, result return mechanism, and Airflow integration implemented (TASK-015 through TASK-030). All 250+ LangGraph tests passing (217 workflow tests + 22 Kafka integration tests + 11 Airflow trigger tests) with 97% overall code coverage (100% for multi-agent workflow module). All tests use production conditions - no mocks or placeholders.
+- **Status**: State definitions, workflows, conditional routing, checkpointing, multi-agent workflows, async Kafka consumer integration, result return mechanism, Airflow integration, and comprehensive error handling with retry mechanisms implemented (TASK-015 through TASK-031). All 277+ LangGraph tests passing (217 workflow tests + 49 Kafka integration tests including 27 error handling tests + 11 Airflow trigger tests) with 97% overall code coverage (100% for multi-agent workflow module). All tests use production conditions - no mocks or placeholders.
 
 **LangChain 1.0.5+**
 - **Why**: LLM integration framework compatible with LangGraph
@@ -87,8 +87,8 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 **aiokafka 0.12.0+**
 - **Why**: Async Kafka client library for asyncio-based applications
 - **Purpose**: Async Kafka consumer for LangGraph workflow integration
-- **Features**: Non-blocking event consumption, async/await pattern, concurrent processing
-- **Status**: Integrated in TASK-027 for async LangGraph Kafka consumer service
+- **Features**: Non-blocking event consumption, async/await pattern, concurrent processing, retry mechanisms, dead letter queue support
+- **Status**: Integrated in TASK-027 for async LangGraph Kafka consumer service, enhanced in TASK-031 with comprehensive error handling and retry mechanisms
 
 **Python 3.11+**
 - **Why**: Modern Python with improved performance and type hints
