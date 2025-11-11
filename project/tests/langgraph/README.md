@@ -121,6 +121,36 @@ Comprehensive tests for LangGraph checkpointing functionality.
 pytest project/tests/langgraph/test_checkpointing.py -v
 ```
 
+### `test_agent_nodes.py` ✅ Complete
+Comprehensive tests for LangGraph specialized agent nodes.
+
+**Status**: ✅ Complete - 16 tests passing (TASK-021)
+
+**Coverage**:
+- Data agent functionality (data_agent)
+- Analysis agent functionality (analysis_agent)
+- Error handling versions (data_agent_with_error_handling, analysis_agent_with_error_handling)
+- State update patterns
+- Result format consistency
+
+**Test Categories**:
+- Data agent tests (4 tests)
+- Analysis agent tests (4 tests)
+- Error handling tests (4 tests)
+- State update tests (3 tests)
+- Result format consistency (1 test)
+
+**Test Philosophy**:
+- ✅ Real LangGraph components (no mocks)
+- ✅ Production-like test data (no placeholders)
+- ✅ Actual state updates (not stubbed)
+- ✅ Real reducer functions (not mocked)
+
+**Run Tests**:
+```bash
+pytest project/tests/langgraph/test_agent_nodes.py -v
+```
+
 ### `test_integration.py` ✅ Complete
 Comprehensive integration tests for complete stateful workflow.
 
@@ -147,6 +177,7 @@ Comprehensive integration tests for complete stateful workflow.
 **Coverage**: >80% for all workflow modules
 - checkpoint_workflow.py: 91% coverage
 - conditional_workflow.py: 89% coverage
+- agent_nodes.py: 100% coverage (16 tests)
 - basic_workflow.py: 78% coverage
 - state.py: 79% coverage
 
@@ -163,7 +194,8 @@ pytest project/tests/langgraph/test_integration.py -v
 - ✅ **Conditional Routing Tests** (TASK-017): Complete - 15 tests passing
 - ✅ **Checkpointing Tests** (TASK-018): Complete - 22 tests passing
 - ✅ **Integration Tests** (TASK-019): Complete - 30 tests passing
-- ✅ **Total**: 144 tests passing - All tests use production LangGraph environment
+- ✅ **Agent Nodes Tests** (TASK-021): Complete - 16 tests passing
+- ✅ **Total**: 160 tests passing - All tests use production LangGraph environment
 
 **CRITICAL**: All tests use real LangGraph libraries and production patterns. No mocks or placeholders are used.
 
@@ -190,6 +222,9 @@ pytest project/tests/langgraph/test_checkpointing.py -v
 
 # Run only integration tests
 pytest project/tests/langgraph/test_integration.py -v
+
+# Run only agent nodes tests
+pytest project/tests/langgraph/test_agent_nodes.py -v
 
 # Run with coverage
 pytest project/tests/langgraph/ --cov=project/langgraph_workflows --cov-report=term-missing

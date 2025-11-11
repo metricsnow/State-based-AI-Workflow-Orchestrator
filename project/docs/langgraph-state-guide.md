@@ -337,6 +337,7 @@ project/langgraph_workflows/
 - [LangGraph Official Documentation](https://langchain-ai.github.io/langgraph/)
 - [State Management Patterns](https://langchain-ai.github.io/langgraph/concepts/low_level/#reducers)
 - [Task Documentation](../dev/tasks/TASK-015.md) - State definitions
+- [Agent Nodes Guide](./langgraph-agent-nodes-guide.md) - Specialized agent nodes implementation
 - [Task Documentation](../dev/tasks/TASK-020.md) - Multi-Agent State Structure
 
 ## Next Steps
@@ -346,7 +347,7 @@ project/langgraph_workflows/
 - ✅ TASK-018: Checkpointing Configuration and Testing (Complete)
 - ✅ TASK-019: Stateful Workflow Integration Tests (Complete)
 - ✅ TASK-020: Multi-Agent State Structure Design (Complete)
-- TASK-021: Specialized Agent Nodes Implementation
+- ✅ TASK-021: Specialized Agent Nodes Implementation (Complete)
 
 ## Related Guides
 

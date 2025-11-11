@@ -24,6 +24,12 @@ from langgraph_workflows.conditional_workflow import (
     node_a_conditional,
     should_continue,
 )
+from langgraph_workflows.agent_nodes import (
+    analysis_agent,
+    analysis_agent_with_error_handling,
+    data_agent,
+    data_agent_with_error_handling,
+)
 from langgraph_workflows.state import (
     MultiAgentState,
     SimpleState,
@@ -51,6 +57,11 @@ __all__ = [
     "validate_state",
     "validate_simple_state",
     "validate_multi_agent_state",
+    # Agent nodes
+    "data_agent",
+    "analysis_agent",
+    "data_agent_with_error_handling",
+    "analysis_agent_with_error_handling",
     # Basic workflow
     "node_a",
     "node_b",
