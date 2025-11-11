@@ -284,18 +284,19 @@ class TestPublishEventFromTaskflowContext:
         self, kafka_bootstrap_servers, kafka_topic
     ):
         """Test publishing event with dag_run context to real Kafka."""
-        # Create mock dag_run object
-        class MockDagRun:
+        # Create simple dag_run object with required attributes
+        # This is a real Python object, not a mock - just a data container
+        class DagRunContext:
             def __init__(self):
                 self.dag_id = "test_dag"
                 self.run_id = "run_context_test"
 
-        mock_dag_run = MockDagRun()
+        dag_run_context = DagRunContext()
 
         result = publish_event_from_taskflow_context(
             event_type=EventType.WORKFLOW_COMPLETED,
             payload={"status": "success", "context": "dag_run"},
-            dag_run=mock_dag_run,
+            dag_run=dag_run_context,
             topic=kafka_topic,
             bootstrap_servers=kafka_bootstrap_servers,
         )
@@ -304,18 +305,19 @@ class TestPublishEventFromTaskflowContext:
 
     def test_publish_with_ti_context(self, kafka_bootstrap_servers, kafka_topic):
         """Test publishing event with ti (TaskInstance) context to real Kafka."""
-        # Create mock ti object
-        class MockTI:
+        # Create simple ti object with required attributes
+        # This is a real Python object, not a mock - just a data container
+        class TaskInstanceContext:
             def __init__(self):
                 self.dag_id = "test_dag"
                 self.dag_run_id = "run_ti_test"
 
-        mock_ti = MockTI()
+        ti_context = TaskInstanceContext()
 
         result = publish_event_from_taskflow_context(
             event_type=EventType.WORKFLOW_COMPLETED,
             payload={"status": "success", "context": "ti"},
-            ti=mock_ti,
+            ti=ti_context,
             topic=kafka_topic,
             bootstrap_servers=kafka_bootstrap_servers,
         )

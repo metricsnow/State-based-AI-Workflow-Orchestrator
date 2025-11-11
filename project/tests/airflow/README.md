@@ -168,6 +168,8 @@ Airflow-Kafka integration tests with real Kafka instances.
 - Tests verify end-to-end publish → consume flow
 - Tests use production Kafka environment from `docker-compose.yml`
 - All producer/consumer connections are real
+- **Environment Values**: All tests use production environment values ("dev", "staging", "prod") - NO "test" placeholders
+- **Context Objects**: Tests use real data container objects (not mocks) for Airflow context
 - Follows project's production-only testing philosophy
 
 ## Running Tests

@@ -200,7 +200,10 @@ When adding tests for a new module:
   - `test_events.py`: 26 tests (TASK-010)
   - `test_producer.py`: 12 integration tests (TASK-011) - All use real Kafka
   - `test_consumer.py`: 15 integration tests (TASK-012) - All use real Kafka
+  - `test_producer_integration.py`: Additional integration tests with real Kafka
+  - `test_consumer_integration.py`: Additional integration tests with real Kafka
 - **CRITICAL**: All tests migrated from mocked tests to real integration tests. No mocks or placeholders.
+- **Environment Values**: All tests use production environment values ("dev", "staging", "prod") - NO "test" placeholders
 
 ### Airflow Tests (✅ Complete - TASK-008)
 - **Total Tests**: 108 tests
@@ -214,13 +217,15 @@ When adding tests for a new module:
   - `test_taskflow_dag_structure.py`: 10 tests (TASK-007)
   - `test_dag_execution.py`: 13 tests (TASK-008)
   - `test_airflow_init.py`: 13 tests (existing)
+- **CRITICAL**: All tests use production environment values ("dev", "staging", "prod") - NO test placeholders
 
-### LangGraph Tests (✅ Complete - TASK-014, TASK-015)
-- **Total Tests**: 31 tests
-- **Status**: All passing (31/31)
+### LangGraph Tests (✅ Complete - TASK-014, TASK-015, TASK-016)
+- **Total Tests**: 49 tests
+- **Status**: All passing (49/49)
 - **Test Files**: 
   - `test_installation.py`: 5 tests - LangGraph development environment verification (TASK-014)
   - `test_state.py`: 26 tests - State definitions and reducers (TASK-015)
-- **Coverage**: All state functions and reducers tested
+  - `test_basic_workflow.py`: 18 tests - Basic StateGraph workflow with nodes (TASK-016)
+- **Coverage**: All state functions, reducers, and workflow components tested
 - **CRITICAL**: All tests use real LangGraph libraries - NO MOCKS, NO PLACEHOLDERS
 

@@ -60,11 +60,37 @@ Comprehensive tests for LangGraph state definitions and reducers.
 pytest project/tests/langgraph/test_state.py -v
 ```
 
+### `test_basic_workflow.py` ✅ Complete
+Comprehensive tests for basic LangGraph StateGraph workflow with nodes.
+
+**Status**: ✅ Complete - 18 tests passing (TASK-016)
+
+**Coverage**:
+- Node function tests (node_a, node_b)
+- Graph construction and compilation
+- Workflow execution end-to-end
+- State updates through nodes
+- State reducer behavior
+- Error handling
+
+**Test Categories**:
+- Node function tests (5 tests)
+- Graph construction tests (3 tests)
+- Workflow execution tests (5 tests)
+- State update tests (3 tests)
+- Error handling tests (2 tests)
+
+**Run Tests**:
+```bash
+pytest project/tests/langgraph/test_basic_workflow.py -v
+```
+
 ## Status
 
 - ✅ **Installation Tests** (TASK-014): Complete - 5 tests passing
 - ✅ **State Definition Tests** (TASK-015): Complete - 26 tests passing
-- ✅ **Total**: 31 tests passing - All tests use production LangGraph environment
+- ✅ **Basic Workflow Tests** (TASK-016): Complete - 18 tests passing
+- ✅ **Total**: 49 tests passing - All tests use production LangGraph environment
 
 **CRITICAL**: All tests use real LangGraph libraries and production patterns. No mocks or placeholders are used.
 
@@ -79,6 +105,9 @@ pytest project/tests/langgraph/test_installation.py -v
 
 # Run only state tests
 pytest project/tests/langgraph/test_state.py -v
+
+# Run only basic workflow tests
+pytest project/tests/langgraph/test_basic_workflow.py -v
 
 # Run with coverage
 pytest project/tests/langgraph/ --cov=project/langgraph_workflows --cov-report=term-missing
@@ -117,7 +146,7 @@ All tests require:
 
 ## Next Steps
 
-- TASK-016: Basic StateGraph with Nodes Implementation
+- ✅ TASK-016: Basic StateGraph with Nodes Implementation (Complete - 18 tests)
 - TASK-017: Conditional Routing Implementation
 - TASK-018: Checkpointing Configuration and Testing
 

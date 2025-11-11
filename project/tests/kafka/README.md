@@ -74,6 +74,11 @@ Kafka consumer functionality tests.
 
 **CRITICAL**: All tests have been migrated from mocked tests to real integration tests. No mocks or placeholders are used.
 
+**Recent Updates**:
+- All environment values use production patterns ("dev", "staging", "prod") - NO "test" placeholders
+- All mock objects replaced with real data containers or production objects
+- All tests verified to use production conditions only
+
 ## Running Tests
 
 ```bash

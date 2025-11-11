@@ -197,7 +197,7 @@ class TestConnectionManagement:
                 workflow_id="test_dag",
                 workflow_run_id="run_flush_test",
                 payload=WorkflowEventPayload(data={"status": "success"}),
-                metadata=WorkflowEventMetadata(environment="test"),
+                metadata=WorkflowEventMetadata(environment="dev"),
             )
             producer.publish_event(event, topic=test_topic)
             producer.flush()
@@ -216,7 +216,7 @@ class TestConnectionManagement:
                 workflow_id="test_dag",
                 workflow_run_id="run_flush_timeout",
                 payload=WorkflowEventPayload(data={"status": "success"}),
-                metadata=WorkflowEventMetadata(environment="test"),
+                metadata=WorkflowEventMetadata(environment="dev"),
             )
             producer.publish_event(event, topic=test_topic)
             producer.flush(timeout=5.0)
@@ -242,7 +242,7 @@ class TestConnectionManagement:
                 workflow_id="test_dag",
                 workflow_run_id="run_context_test",
                 payload=WorkflowEventPayload(data={"status": "success"}),
-                metadata=WorkflowEventMetadata(environment="test"),
+                metadata=WorkflowEventMetadata(environment="dev"),
             )
             result = producer.publish_event(event, topic=test_topic)
             assert result is True
