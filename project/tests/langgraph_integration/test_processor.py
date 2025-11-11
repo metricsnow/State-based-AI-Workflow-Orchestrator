@@ -121,7 +121,8 @@ class TestWorkflowProcessor:
             metadata=WorkflowEventMetadata(environment="dev", version="1.0"),
         )
         
-        processor = WorkflowProcessor()
+        # Processor without result_producer (for testing)
+        processor = WorkflowProcessor(result_producer=None)
         result = await processor.process_workflow_event(event)
         
         assert result is not None
@@ -142,9 +143,31 @@ class TestWorkflowProcessor:
             metadata=WorkflowEventMetadata(environment="dev", version="1.0"),
         )
         
-        processor = WorkflowProcessor()
+        # Processor without result_producer (for testing)
+        processor = WorkflowProcessor(result_producer=None)
         # Should not raise - workflow should handle default state
         result = await processor.process_workflow_event(event)
         
         assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_extract_result(self) -> None:
+        """Test result extraction from workflow state."""
+        processor = WorkflowProcessor()
+        
+        workflow_result = {
+            "completed": True,
+            "agent_results": {"agent1": "result1"},
+            "task": "test_task",
+            "metadata": {"key": "value"},
+            "other_field": "ignored",
+        }
+        
+        result = processor._extract_result(workflow_result)
+        
+        assert result["completed"] is True
+        assert result["agent_results"] == {"agent1": "result1"}
+        assert result["task"] == "test_task"
+        assert result["metadata"] == {"key": "value"}
+        assert "other_field" not in result
 

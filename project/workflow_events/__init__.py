@@ -11,6 +11,7 @@ from .schema import (
     WorkflowEventPayload,
     WorkflowEventMetadata,
     WorkflowEvent,
+    WorkflowResultEvent,
 )
 from .schema_utils import (
     generate_json_schema,
@@ -27,6 +28,7 @@ __all__ = [
     "WorkflowEventPayload",
     "WorkflowEventMetadata",
     "WorkflowEvent",
+    "WorkflowResultEvent",
     "WorkflowEventProducer",
     "WorkflowEventConsumer",
     "generate_json_schema",

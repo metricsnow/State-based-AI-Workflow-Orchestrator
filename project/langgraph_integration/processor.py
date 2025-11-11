@@ -6,11 +6,12 @@ and execution of LangGraph workflows.
 
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from workflow_events import WorkflowEvent, EventType
 from langgraph_workflows.state import MultiAgentState
 from langgraph_workflows.multi_agent_workflow import multi_agent_graph
+from langgraph_integration.result_producer import ResultProducer
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +67,40 @@ class WorkflowProcessor:
     
     This class handles the execution of LangGraph workflows triggered by
     Kafka workflow events. It converts events to state, executes workflows,
-    and handles errors gracefully.
+    publishes results to Kafka, and handles errors gracefully.
     
     Attributes:
-        None - stateless processor for workflow execution.
+        result_producer: Optional ResultProducer for publishing results to Kafka.
+            If None, results are not published (for testing or backward compatibility).
     """
+    
+    def __init__(self, result_producer: Optional[ResultProducer] = None):
+        """Initialize workflow processor.
+        
+        Args:
+            result_producer: Optional ResultProducer instance. If provided,
+                results will be published to Kafka result topic.
+        """
+        self.result_producer = result_producer
+    
+    def _extract_result(self, workflow_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract result data from workflow state.
+        
+        Extracts relevant fields from the LangGraph workflow result state
+        for publishing to the result topic.
+        
+        Args:
+            workflow_result: Dictionary containing workflow execution result.
+        
+        Returns:
+            Dictionary with extracted result data.
+        """
+        return {
+            "completed": workflow_result.get("completed", False),
+            "agent_results": workflow_result.get("agent_results", {}),
+            "task": workflow_result.get("task", ""),
+            "metadata": workflow_result.get("metadata", {}),
+        }
     
     async def process_workflow_event(self, event: WorkflowEvent) -> Dict[str, Any]:
         """Process a workflow event by executing LangGraph workflow.
@@ -117,7 +147,34 @@ class WorkflowProcessor:
                 f"completed: {result.get('completed', False)}"
             )
             
-            # TODO: Publish result to result topic (TASK-028)
+            # Extract result data for publishing
+            result_data = self._extract_result(result)
+            
+            # Publish result to result topic if producer is available
+            if self.result_producer:
+                try:
+                    await self.result_producer.publish_result(
+                        correlation_id=event.event_id,
+                        workflow_id=event.workflow_id,
+                        workflow_run_id=event.workflow_run_id,
+                        result=result_data,
+                        status="success",
+                    )
+                    logger.debug(
+                        f"Result published for event: {event.event_id}"
+                    )
+                except Exception as e:
+                    # Log error but don't fail the workflow execution
+                    logger.error(
+                        f"Failed to publish result for event {event.event_id}: {e}",
+                        exc_info=True,
+                    )
+            else:
+                logger.debug(
+                    f"Result producer not available, skipping result publish "
+                    f"for event: {event.event_id}"
+                )
+            
             return result
         
         except Exception as e:
@@ -125,6 +182,28 @@ class WorkflowProcessor:
                 f"Error processing workflow event {event.event_id}: {e}",
                 exc_info=True,
             )
+            
+            # Publish error result if producer is available
+            if self.result_producer:
+                try:
+                    await self.result_producer.publish_result(
+                        correlation_id=event.event_id,
+                        workflow_id=event.workflow_id,
+                        workflow_run_id=event.workflow_run_id,
+                        result={},
+                        status="error",
+                        error=str(e),
+                    )
+                    logger.debug(
+                        f"Error result published for event: {event.event_id}"
+                    )
+                except Exception as publish_error:
+                    logger.error(
+                        f"Failed to publish error result for event "
+                        f"{event.event_id}: {publish_error}",
+                        exc_info=True,
+                    )
+            
             # Re-raise to allow caller to handle (e.g., dead letter queue)
             raise
 

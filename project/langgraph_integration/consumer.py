@@ -15,6 +15,7 @@ from aiokafka.errors import KafkaError
 from workflow_events import WorkflowEvent, EventType
 from langgraph_integration.processor import WorkflowProcessor
 from langgraph_integration.config import ConsumerConfig
+from langgraph_integration.result_producer import ResultProducer
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,10 @@ class LangGraphKafkaConsumer:
         """
         self.config = config or ConsumerConfig()
         self.consumer: Optional[AIOKafkaConsumer] = None
-        self.processor = WorkflowProcessor()
+        self.result_producer = ResultProducer(
+            bootstrap_servers=self.config.bootstrap_servers
+        )
+        self.processor = WorkflowProcessor(result_producer=self.result_producer)
         self.running = False
     
     async def start(self) -> None:
@@ -74,6 +78,10 @@ class LangGraphKafkaConsumer:
             )
             
             await self.consumer.start()
+            
+            # Start result producer
+            await self.result_producer.start()
+            
             self.running = True
             
             logger.info(
@@ -92,11 +100,18 @@ class LangGraphKafkaConsumer:
     async def stop(self) -> None:
         """Stop the consumer service gracefully.
         
-        Stops the consumer and leaves the consumer group. Ensures proper
-        cleanup of resources and offset commits.
+        Stops the consumer and result producer, and leaves the consumer group.
+        Ensures proper cleanup of resources and offset commits.
         """
         self.running = False
         
+        # Stop result producer first
+        try:
+            await self.result_producer.stop()
+        except Exception as e:
+            logger.warning(f"Error stopping result producer: {e}", exc_info=True)
+        
+        # Stop consumer
         if self.consumer:
             try:
                 logger.info("Stopping Kafka consumer...")

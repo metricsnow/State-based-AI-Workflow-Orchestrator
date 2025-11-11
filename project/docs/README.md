@@ -53,12 +53,20 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
 ### LangGraph-Kafka Integration
 - **[LangGraph Kafka Integration Guide](langgraph-kafka-integration-guide.md)** - Async Kafka consumer for LangGraph workflows
   - ✅ TASK-027: Async LangGraph Kafka Consumer Service (Complete)
-  - Async Kafka consumer implementation using aiokafka
-  - Event-to-state conversion for LangGraph workflows
-  - Non-blocking event processing with concurrent workflow execution
-  - Error handling and graceful shutdown
-  - Configuration management and service entry point
-  - 22 comprehensive production tests, all passing
+    - Async Kafka consumer implementation using aiokafka
+    - Non-blocking event processing with concurrent workflow execution
+    - Error handling and graceful shutdown
+    - Configuration management and service entry point
+  - ✅ TASK-028: Result Return Mechanism (Complete)
+    - Result producer for publishing workflow results
+    - Result polling mechanism for Airflow tasks
+    - Correlation ID matching for request/response pairing
+  - ✅ TASK-029: LangGraph Workflow Integration (Complete)
+    - Event-to-state conversion for LangGraph workflows
+    - Complete workflow execution integration
+    - Result publishing integration
+    - Checkpointing preserved (uses event_id as thread_id)
+  - 29+ comprehensive production tests, all passing
   - **CRITICAL**: All tests use production conditions - no mocks, no placeholders
 
 ## Phase 2 Documentation

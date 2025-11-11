@@ -12,6 +12,7 @@ from .kafka_utils import (
     publish_dag_completion_event,
 )
 from .task_helpers import publish_event_from_taskflow_context
+from .result_poller import WorkflowResultPoller
 
 __all__ = [
     "get_kafka_producer",
@@ -19,5 +20,6 @@ __all__ = [
     "publish_task_completion_event",
     "publish_dag_completion_event",
     "publish_event_from_taskflow_context",
+    "WorkflowResultPoller",
 ]
 
