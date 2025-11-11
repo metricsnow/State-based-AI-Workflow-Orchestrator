@@ -42,6 +42,11 @@ project/tests/
     ├── test_consumer.py         # Consumer tests
     ├── test_events.py            # Event schema tests
     └── README.md
+└── langgraph/              # LangGraph-specific tests (Phase 2+)
+    ├── __init__.py
+    ├── test_installation.py    # LangGraph environment tests
+    ├── test_state.py            # State definition and reducer tests
+    └── README.md
 ```
 
 ## Module Organization
@@ -166,7 +171,7 @@ pip install -r project/tests/infrastructure/requirements-test.txt
 - [Infrastructure Tests](infrastructure/README.md) - Docker Compose and service tests
 - [Airflow Tests](airflow/README.md) - Airflow DAG and workflow tests (✅ 108 tests, 97% coverage)
 - [Kafka Tests](kafka/README.md) - Kafka producer/consumer tests (✅ 53 tests, all using real Kafka)
-- [LangGraph Tests](langgraph/) - LangGraph development environment tests (✅ 5 tests)
+- [LangGraph Tests](langgraph/README.md) - LangGraph state and workflow tests (✅ 31 tests, all using production patterns)
 
 ## Adding New Tests
 
@@ -210,8 +215,12 @@ When adding tests for a new module:
   - `test_dag_execution.py`: 13 tests (TASK-008)
   - `test_airflow_init.py`: 13 tests (existing)
 
-### LangGraph Tests (✅ Complete - TASK-014)
-- **Total Tests**: 5 tests
-- **Status**: All passing (5/5)
-- **Test File**: `test_installation.py` - LangGraph development environment verification
+### LangGraph Tests (✅ Complete - TASK-014, TASK-015)
+- **Total Tests**: 31 tests
+- **Status**: All passing (31/31)
+- **Test Files**: 
+  - `test_installation.py`: 5 tests - LangGraph development environment verification (TASK-014)
+  - `test_state.py`: 26 tests - State definitions and reducers (TASK-015)
+- **Coverage**: All state functions and reducers tested
+- **CRITICAL**: All tests use real LangGraph libraries - NO MOCKS, NO PLACEHOLDERS
 

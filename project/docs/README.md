@@ -39,6 +39,15 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
   - ✅ TASK-013: Airflow-Kafka Integration (Complete)
   - Reusable utilities, TaskFlow API integration, event publishing
 
+## Phase 2 Documentation
+
+### AI Workflow Foundation
+- **[LangGraph State Guide](langgraph-state-guide.md)** - LangGraph state definitions and reducers
+  - ✅ TASK-015: State Definition and Reducers Implementation (Complete)
+  - State schemas (WorkflowState, SimpleState), reducers (merge_dicts, last_value, add_messages)
+  - State validation, usage examples, best practices
+  - 26 comprehensive tests, all passing
+
 ### Main PRD
 - **[Main PRD](prd.md)** - Complete product requirements document
 - **[Phase PRDs](prd_phase*.md)** - Phase-specific requirements (Phases 1-9)
@@ -76,7 +85,8 @@ docs/
 ├── event-schema-guide.md       # Event schema documentation (TASK-010)
 ├── kafka-producer-guide.md     # Kafka producer usage guide (TASK-011)
 ├── kafka-consumer-guide.md     # Kafka consumer usage guide (TASK-012)
-└── kafka-setup-guide.md        # Kafka infrastructure setup (TASK-009)
+├── kafka-setup-guide.md        # Kafka infrastructure setup (TASK-009)
+└── langgraph-state-guide.md    # LangGraph state definitions (TASK-015)
 ```
 
 ## Security Requirements
@@ -123,7 +133,13 @@ See [Testing Guide](testing-guide-phase1.md) and [Test Suite README](../tests/RE
 - **Documentation**: 10+ comprehensive guides
 - **Status**: Production-ready for Phase 1 scope
 
-**Next Phase**: Phase 2 - AI Workflow Foundation (LangGraph integration)
+**Phase 2 Progress**:
+- ✅ TASK-014: LangGraph Development Environment Setup (Complete - 5 tests)
+- ✅ TASK-015: State Definition and Reducers Implementation (Complete - 26 tests)
+- **Total Tests**: 31 LangGraph tests (all passing)
+- **Status**: Foundation complete, ready for StateGraph implementation
+
+**Next Tasks**: TASK-016 (Basic StateGraph), TASK-017 (Conditional Routing), TASK-018 (Checkpointing)
 
 ## Contributing
 

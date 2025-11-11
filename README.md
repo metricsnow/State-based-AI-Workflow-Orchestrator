@@ -8,12 +8,14 @@ This project is an AI-powered workflow orchestration system designed specificall
 
 The architecture is built on an event-driven foundation using Apache Kafka, which enables seamless coordination between traditional orchestration tasks and AI-powered workflows. Airflow manages scheduled data pipelines, ETL processes, and workflow dependencies, while publishing workflow events to Kafka. These events trigger LangGraph stateful agent workflows that can make intelligent decisions, coordinate multi-agent systems, and process complex scenarios that require AI reasoning. This decoupled, event-driven approach ensures that each component can scale independently while maintaining loose coupling and high reliability.
 
-Currently in Phase 1, the system has established the foundational infrastructure with Airflow TaskFlow API for modern DAG development, Kafka for event streaming, and comprehensive event schema validation using Pydantic. The system is production-ready with 176 passing tests, 97% code coverage, and complete documentation. Future phases will integrate LangGraph for AI workflows, local LLM deployment with Ollama, and production infrastructure with Kubernetes, ultimately creating a complete intelligent orchestration platform that can automate complex trading operations workflows with both reliability and intelligence.
+Phase 1 is complete with foundational infrastructure including Airflow TaskFlow API for modern DAG development, Kafka for event streaming, and comprehensive event schema validation using Pydantic. The system has 176 passing tests, 97% code coverage, and complete documentation.
+
+Phase 2 (AI Workflow Foundation) is in progress with LangGraph state definitions and reducers implemented. The system now includes LangGraph state schemas (WorkflowState, SimpleState) with proper reducers for state management. Future phases will add StateGraph workflows, multi-agent systems, local LLM deployment with Ollama, and production infrastructure with Kubernetes, ultimately creating a complete intelligent orchestration platform that can automate complex trading operations workflows with both reliability and intelligence.
 
 - **TaskFlow API**: Modern Airflow DAG development with automatic XCom management and type hints
 - **Event-Driven Architecture**: Decoupled components communicate via Kafka events for scalability
 - **Type Safety**: Comprehensive type hints and Pydantic validation for runtime safety
-- **Test Coverage**: 97% code coverage with 176 tests covering all components
+- **Test Coverage**: 97% code coverage with 207 tests covering all components (176 Phase 1 + 31 LangGraph)
 - **Containerization**: Docker Compose for consistent development and deployment environments
 - **Documentation**: Comprehensive guides for all components with code examples
 - **Error Handling**: Graceful degradation - Kafka failures don't break Airflow tasks
@@ -62,8 +64,21 @@ Currently in Phase 1, the system has established the foundational infrastructure
 
 **pytest**
 - **Why**: Industry-standard Python testing framework
-- **Purpose**: Comprehensive test suite with 176 tests covering all components
+- **Purpose**: Comprehensive test suite with 207 tests covering all components (176 Phase 1 + 31 LangGraph)
 - **Coverage**: 97% for TaskFlow DAG code (exceeds 80% requirement)
+
+### AI Workflow Layer (Phase 2+)
+
+**LangGraph 1.0.3+**
+- **Why**: Industry-standard framework for building stateful AI agent workflows
+- **Purpose**: Enables stateful multi-agent workflows with checkpointing and state management
+- **Key Features**: StateGraph, reducers, checkpointing, conditional routing
+- **Status**: State definitions and reducers implemented (TASK-015)
+
+**LangChain 1.0.5+**
+- **Why**: LLM integration framework compatible with LangGraph
+- **Purpose**: Provides LLM integration and tool support for AI workflows
+- **Status**: Installed and verified (TASK-014)
 
 ### Python Libraries
 
@@ -266,7 +281,7 @@ Currently in Phase 1, the system has established the foundational infrastructure
     └────────────────────────────┘
 ```
 
-**Description**: Complete Phase 1 architecture showing all services running in Docker Compose. Airflow orchestrates workflows, stores state in PostgreSQL, and publishes events to Kafka. Kafka enables event-driven coordination for future AI workflow integration (Phase 2+).
+**Description**: Complete Phase 1 architecture showing all services running in Docker Compose. Airflow orchestrates workflows, stores state in PostgreSQL, and publishes events to Kafka. Phase 2 adds LangGraph state definitions and reducers for AI workflow foundation. Kafka enables event-driven coordination for AI workflow integration.
 
 ## Project Structure
 
@@ -283,10 +298,13 @@ Currently in Phase 1, the system has established the foundational infrastructure
 │   ├── docs/                # Project documentation
 │   │   ├── prd.md          # Product Requirements Document
 │   │   └── prd_phase*.md   # Phase-specific PRDs
+│   ├── langgraph_workflows/ # LangGraph state and workflow definitions (Phase 2+)
+│   │   └── state.py         # State schemas and reducers
 │   └── tests/               # Test suite (modular structure)
 │       ├── infrastructure/  # Docker Compose & infrastructure tests
 │       ├── airflow/         # Airflow tests (Phase 1.2+)
-│       └── kafka/           # Kafka tests (Phase 1.3+)
+│       ├── kafka/           # Kafka tests (Phase 1.3+)
+│       └── langgraph/       # LangGraph tests (Phase 2+)
 ├── scripts/                 # Utility scripts
 │   ├── generate-fernet-key.sh
 │   └── test-docker-compose.sh
@@ -305,7 +323,14 @@ Currently in Phase 1, the system has established the foundational infrastructure
 
 ## Documentation
 
-See `project/docs/prd.md` for the complete Product Requirements Document.
+Comprehensive documentation is available in `project/docs/`:
+
+- **[Documentation Index](project/docs/README.md)** - Complete documentation overview
+- **[LangGraph State Guide](project/docs/langgraph-state-guide.md)** - State definitions and reducers (Phase 2)
+- **[Testing Guide](project/tests/README.md)** - Complete test suite documentation
+- **[Main PRD](project/docs/prd.md)** - Complete Product Requirements Document
+
+See `project/docs/README.md` for all available documentation.
 
 ## Development Framework
 
