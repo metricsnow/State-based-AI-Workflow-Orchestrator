@@ -593,7 +593,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from kafka import KafkaProducer
 import json
@@ -662,7 +662,7 @@ async def root():
 @app.get("/health", tags=["Health"])
 async def health():
     """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.utcnow()}
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc)}
 
 @app.post("/workflows/trigger", response_model=WorkflowResponse, tags=["Workflows"])
 async def trigger_workflow(request: WorkflowRequest):
@@ -673,7 +673,7 @@ async def trigger_workflow(request: WorkflowRequest):
     event = {
         "event_id": str(uuid.uuid4()),
         "event_type": "workflow.triggered",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "source": "fastapi",
         "workflow_id": request.workflow_id,
         "workflow_type": request.workflow_type.value,
@@ -698,7 +698,7 @@ async def trigger_workflow(request: WorkflowRequest):
     return WorkflowResponse(
         workflow_run_id=workflow_run_id,
         status="triggered",
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         workflow_id=request.workflow_id,
         workflow_type=request.workflow_type.value
     )
@@ -716,7 +716,7 @@ async def get_workflow_status(workflow_run_id: str):
         workflow_run_id=workflow_run_id,
         status="running",
         progress=0.5,
-        started_at=datetime.utcnow()
+        started_at=datetime.now(timezone.utc)
     )
 
 @app.get("/workflows", response_model=List[WorkflowInfo], tags=["Workflows"])

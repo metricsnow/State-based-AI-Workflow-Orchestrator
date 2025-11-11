@@ -29,7 +29,7 @@ event = WorkflowEvent(
 |-------|------|----------|-------------|
 | `event_id` | UUID | No (auto-generated) | Unique identifier for the event |
 | `event_type` | EventType | Yes | Type of workflow event |
-| `timestamp` | datetime | No (auto-generated) | ISO 8601 timestamp when event was generated |
+| `timestamp` | datetime | No (auto-generated) | ISO 8601 timestamp when event was generated (timezone-aware UTC) |
 | `source` | EventSource | Yes | Source system that generated the event |
 | `workflow_id` | str | Yes | Identifier of the workflow (e.g., DAG ID) |
 | `workflow_run_id` | str | Yes | Identifier of the specific workflow run |
@@ -286,6 +286,29 @@ Tests cover:
 - Schema versioning support
 - Event type and source enumeration
 
+## Timestamp Handling
+
+The `timestamp` field is automatically generated using timezone-aware UTC timestamps:
+
+```python
+from datetime import datetime, timezone
+
+# Timestamp is automatically set to timezone-aware UTC
+event = WorkflowEvent(...)
+print(event.timestamp)
+# Output: 2025-01-27 10:00:00.123456+00:00
+
+# Timestamp is timezone-aware
+assert event.timestamp.tzinfo is not None
+assert event.timestamp.tzinfo == timezone.utc
+
+# ISO format includes timezone
+print(event.timestamp.isoformat())
+# Output: 2025-01-27T10:00:00.123456+00:00
+```
+
+**Note**: The implementation uses `datetime.now(timezone.utc)` instead of the deprecated `datetime.utcnow()` for future compatibility with Python 3.12+.
+
 ## Best Practices
 
 1. **Always validate events**: Use Pydantic models for type safety
@@ -294,6 +317,7 @@ Tests cover:
 4. **Handle validation errors**: Catch `ValidationError` when deserializing
 5. **Document payload structure**: Document expected payload structure for each event type
 6. **Test serialization**: Ensure events serialize correctly for Kafka
+7. **Timezone-aware timestamps**: All timestamps are UTC and timezone-aware for consistency
 
 ## Publishing Events to Kafka
 

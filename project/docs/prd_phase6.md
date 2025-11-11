@@ -249,6 +249,7 @@ workflow.add_conditional_edges(
 **Kafka Dead Letter Queue**:
 ```python
 from kafka import KafkaConsumer, KafkaProducer
+from datetime import datetime, timezone
 import json
 
 # Consumer with error handling
@@ -275,7 +276,7 @@ for message in consumer:
         dlq_event = {
             "original_event": message.value,
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         dlq_producer.send('workflow-events-dlq', dlq_event)
         dlq_producer.flush()

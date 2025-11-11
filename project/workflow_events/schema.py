@@ -6,7 +6,7 @@ Uses Pydantic for validation, serialization, and JSON schema generation.
 """
 
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any
 from uuid import UUID, uuid4
 
@@ -95,7 +95,7 @@ class WorkflowEvent(BaseModel):
         description="Type of workflow event",
     )
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.now(timezone.utc),
         description="ISO 8601 timestamp when the event was generated",
     )
     source: EventSource = Field(

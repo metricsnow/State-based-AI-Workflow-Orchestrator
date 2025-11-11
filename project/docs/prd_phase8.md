@@ -71,7 +71,7 @@ As a System Operator, I want advanced Airflow features so that I can handle comp
 ```python
 from airflow import DAG
 from airflow.decorators import task
-from datetime import datetime
+from datetime import datetime, timezone
 import yaml
 
 def generate_dags_from_config():
@@ -423,7 +423,7 @@ As a developer, I want workflow versioning so that I can safely iterate on workf
 ```python
 from git import Repo
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 class WorkflowVersionManager:
     """Manage workflow versions"""
@@ -434,7 +434,7 @@ class WorkflowVersionManager:
     
     def create_version(self, workflow_id: str, workflow_def: dict) -> str:
         """Create new workflow version"""
-        version = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        version = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         
         # Save workflow definition
         workflow_file = f"{self.workflows_dir}/{workflow_id}_v{version}.json"
@@ -543,7 +543,7 @@ As a user, I want workflow analytics so that I can optimize system performance.
 ```python
 from prometheus_client import Counter, Histogram, Gauge
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Metrics
 workflow_executions = Counter('workflow_executions_total', 'Total executions', ['workflow_id', 'status'])
@@ -562,7 +562,7 @@ def track_workflow_execution(workflow_id: str, status: str, duration: float, cos
     cur = conn.cursor()
     cur.execute(
         "INSERT INTO workflow_executions (workflow_id, status, duration, cost, timestamp) VALUES (%s, %s, %s, %s, %s)",
-        (workflow_id, status, duration, cost, datetime.utcnow())
+        (workflow_id, status, duration, cost, datetime.now(timezone.utc))
     )
     conn.commit()
 ```

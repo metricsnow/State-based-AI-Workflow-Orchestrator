@@ -19,6 +19,7 @@ from .schema_utils import (
     get_serialization_schema,
 )
 from .producer import WorkflowEventProducer
+from .consumer import WorkflowEventConsumer
 
 __all__ = [
     "EventType",
@@ -27,6 +28,7 @@ __all__ = [
     "WorkflowEventMetadata",
     "WorkflowEvent",
     "WorkflowEventProducer",
+    "WorkflowEventConsumer",
     "generate_json_schema",
     "save_json_schema",
     "get_validation_schema",

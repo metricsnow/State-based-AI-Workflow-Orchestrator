@@ -226,7 +226,7 @@ services:
 **TaskFlow API Pattern**:
 ```python
 from airflow.decorators import dag, task
-from datetime import datetime
+from datetime import datetime, timezone
 
 @dag(
     dag_id="example_taskflow",
@@ -345,7 +345,7 @@ producer = KafkaProducer(
 event = {
     "event_id": str(uuid.uuid4()),
     "event_type": "workflow.triggered",
-    "timestamp": datetime.utcnow().isoformat(),
+    "timestamp": datetime.now(timezone.utc).isoformat(),
     "source": "airflow",
     "workflow_id": "example_dag",
     "workflow_run_id": "run_123",

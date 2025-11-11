@@ -189,7 +189,7 @@ As a System Operator, I want trading integrations so that I can integrate with t
 **Market Data Ingestion**:
 ```python
 from airflow.decorators import task, dag
-from datetime import datetime
+from datetime import datetime, timezone
 import yfinance as yf
 
 @task
@@ -350,7 +350,7 @@ spec:
 **Audit Logging**:
 ```python
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 audit_logger = logging.getLogger('audit')
 audit_logger.setLevel(logging.INFO)
@@ -358,7 +358,7 @@ audit_logger.setLevel(logging.INFO)
 def audit_log(action: str, user: str, resource: str, result: str):
     """Log audit event"""
     audit_logger.info({
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "action": action,
         "user": user,
         "resource": resource,

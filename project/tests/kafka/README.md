@@ -49,16 +49,27 @@ Kafka producer functionality tests.
 - Error handling (timeouts, Kafka errors)
 - Integration test placeholder (requires running Kafka)
 
-### `test_consumer.py` (To Be Implemented)
+### `test_consumer.py` ✅ Complete
 Kafka consumer functionality tests.
 
-**Status**: Planned for TASK-012
+**Status**: ✅ Complete - 25 tests passing (TASK-012)
+
+**Coverage**:
+- Consumer initialization and configuration
+- Event deserialization
+- Topic subscription
+- Event consumption (success and error cases)
+- Polling functionality
+- Offset management (commit, seek, position)
+- Connection management (close, context manager)
+- Error handling (deserialization errors, callback errors)
+- Integration test placeholder (requires running Kafka)
 
 ## Status
 
 - ✅ **Event Schema Tests** (TASK-010): Complete - 26 tests passing
 - ✅ **Producer Tests** (TASK-011): Complete - 17 tests passing
-- ⏳ **Consumer Tests** (TASK-012): Planned
+- ✅ **Consumer Tests** (TASK-012): Complete - 25 tests passing
 
 ## Running Tests
 
@@ -72,9 +83,13 @@ pytest project/tests/kafka/test_events.py -v
 # Run only producer tests
 pytest project/tests/kafka/test_producer.py -v
 
+# Run only consumer tests
+pytest project/tests/kafka/test_consumer.py -v
+
 # Run with coverage
 pytest project/tests/kafka/test_events.py --cov=workflow_events --cov-report=term-missing
 pytest project/tests/kafka/test_producer.py --cov=workflow_events.producer --cov-report=term-missing
+pytest project/tests/kafka/test_consumer.py --cov=workflow_events.consumer --cov-report=term-missing
 ```
 
 ## Event Schema Module

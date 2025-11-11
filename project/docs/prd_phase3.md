@@ -139,7 +139,7 @@ from airflow.decorators import task
 from kafka import KafkaProducer
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 @task
 def trigger_langgraph_workflow(data: dict):
@@ -155,7 +155,7 @@ def trigger_langgraph_workflow(data: dict):
     event = {
         "event_id": str(uuid.uuid4()),
         "event_type": "workflow.triggered",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "source": "airflow",
         "workflow_id": "example_dag",
         "workflow_run_id": "run_123",

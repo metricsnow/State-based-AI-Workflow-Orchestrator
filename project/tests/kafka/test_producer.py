@@ -339,7 +339,6 @@ class TestProducerIntegration:
     """Integration tests for producer (require real Kafka)."""
 
     @pytest.mark.integration
-    @pytest.mark.skip(reason="Requires running Kafka instance")
     def test_publish_event_to_kafka(self):
         """Test publishing event to real Kafka instance."""
         # This test requires a running Kafka instance
