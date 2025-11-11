@@ -13,3 +13,6 @@ langchain-ollama>=0.1.0
 pydantic>=2.0.0
 typing-extensions>=4.8.0
 
+# Kafka Integration (TASK-027: Phase 3)
+aiokafka>=0.10.0
+

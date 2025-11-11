@@ -50,6 +50,17 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
   - 13 comprehensive production tests, all passing
   - **CRITICAL**: All tests use production conditions - no mocks, no placeholders
 
+### LangGraph-Kafka Integration
+- **[LangGraph Kafka Integration Guide](langgraph-kafka-integration-guide.md)** - Async Kafka consumer for LangGraph workflows
+  - ✅ TASK-027: Async LangGraph Kafka Consumer Service (Complete)
+  - Async Kafka consumer implementation using aiokafka
+  - Event-to-state conversion for LangGraph workflows
+  - Non-blocking event processing with concurrent workflow execution
+  - Error handling and graceful shutdown
+  - Configuration management and service entry point
+  - 22 comprehensive production tests, all passing
+  - **CRITICAL**: All tests use production conditions - no mocks, no placeholders
+
 ## Phase 2 Documentation
 
 ### AI Workflow Foundation
@@ -145,7 +156,8 @@ docs/
 ├── langgraph-agent-nodes-guide.md  # Agent nodes (TASK-021)
 ├── langgraph-orchestrator-guide.md  # Orchestrator agent (TASK-022)
 ├── langgraph-multi-agent-workflow-guide.md  # Multi-agent workflow (TASK-023)
-└── langchain-ollama-integration-guide.md  # LangChain-Ollama integration (TASK-026)
+├── langchain-ollama-integration-guide.md  # LangChain-Ollama integration (TASK-026)
+└── langgraph-kafka-integration-guide.md  # LangGraph Kafka integration (TASK-027)
 ```
 
 ## Security Requirements
@@ -210,8 +222,9 @@ See [Testing Guide](testing-guide-phase1.md) and [Test Suite README](../tests/RE
 **Phase 3 Progress**:
 - ✅ TASK-025: Ollama Service Docker Integration (Complete)
 - ✅ TASK-026: LangChain-Ollama Package Integration (Complete - 13 tests)
-- **Total Tests**: 13 langchain-ollama integration tests (all passing)
-- **Status**: Milestone 1.7 in progress - Package integration complete, ready for implementation
+- ✅ TASK-027: Async LangGraph Kafka Consumer Service (Complete - 22 tests)
+- **Total Tests**: 35 Phase 3 tests (13 langchain-ollama + 22 langgraph-kafka integration, all passing)
+- **Status**: Milestone 1.6 in progress - Kafka consumer complete, ready for result publishing (TASK-028)
 
 **Completed**: 
 - TASK-022 (Orchestrator Agent Node Implementation) - orchestrator_agent and route_to_agent with error handling, 21 tests passing

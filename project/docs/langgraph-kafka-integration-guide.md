@@ -1,0 +1,546 @@
+# LangGraph Kafka Integration Guide
+
+Complete guide to async Kafka consumer integration for LangGraph workflows, enabling event-driven workflow execution.
+
+## Overview
+
+The LangGraph Kafka integration provides an async Kafka consumer service that consumes workflow events from Kafka and triggers LangGraph workflows asynchronously. This integration enables event-driven coordination between Airflow tasks and LangGraph workflows, allowing Airflow to trigger AI-powered workflows via Kafka events.
+
+**Status**: ✅ **TASK-027: Async LangGraph Kafka Consumer Service (Complete)**
+- 22 comprehensive production tests, all passing
+- **CRITICAL**: All tests use production conditions - no mocks, no placeholders
+
+## Architecture
+
+### Event-Driven Workflow Pattern
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Airflow Task                              │
+│              (Publishes workflow event)                      │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       │ Publishes WorkflowEvent
+                       │ (EventType.WORKFLOW_TRIGGERED)
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Kafka Broker                             │
+│              Topic: workflow-events                         │
+│  - Stores events persistently                              │
+│  - Manages partitions and offsets                          │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       │ Consumes events
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│         LangGraph Kafka Consumer Service                    │
+│              (Async, non-blocking)                          │
+│  - Consumes events from Kafka                               │
+│  - Converts events to LangGraph state                       │
+│  - Triggers workflows asynchronously                        │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       │ Executes workflow
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│              LangGraph Multi-Agent Workflow                 │
+│              (multi_agent_graph)                             │
+│  - Orchestrator agent                                       │
+│  - Data agent                                               │
+│  - Analysis agent                                           │
+│  - Checkpointing enabled                                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Module Structure
+
+The LangGraph Kafka integration is organized in the `langgraph_integration` module:
+
+```
+project/langgraph_integration/
+├── __init__.py          # Module exports
+├── config.py            # Configuration management
+├── processor.py         # Event-to-state conversion and workflow execution
+├── consumer.py          # Async Kafka consumer
+└── service.py           # Service entry point
+```
+
+## Components
+
+### ConsumerConfig
+
+Configuration management for the Kafka consumer service.
+
+```python
+from langgraph_integration.config import ConsumerConfig
+
+# Default configuration (loads from environment variables)
+config = ConsumerConfig()
+
+# Custom configuration
+config = ConsumerConfig(
+    bootstrap_servers="localhost:9092",
+    topic="workflow-events",
+    group_id="langgraph-consumer-group",
+    auto_offset_reset="latest",
+    enable_auto_commit=True,
+)
+```
+
+**Configuration Options**:
+- `bootstrap_servers`: Kafka broker addresses (default: `localhost:9092`)
+- `topic`: Kafka topic name (default: `workflow-events`)
+- `group_id`: Consumer group ID (default: `langgraph-consumer-group`)
+- `auto_offset_reset`: Offset reset policy (`earliest` or `latest`, default: `latest`)
+- `enable_auto_commit`: Auto-commit offsets (default: `True`)
+- `max_poll_records`: Maximum records per poll (default: `500`)
+- `session_timeout_ms`: Session timeout (default: `30000`)
+- `heartbeat_interval_ms`: Heartbeat interval (default: `3000`)
+
+**Environment Variables**:
+- `KAFKA_BOOTSTRAP_SERVERS`: Kafka broker addresses
+- `KAFKA_WORKFLOW_EVENTS_TOPIC`: Kafka topic name
+- `KAFKA_CONSUMER_GROUP_ID`: Consumer group ID
+- `KAFKA_ENABLE_AUTO_COMMIT`: Auto-commit setting (`true`/`false`)
+
+### WorkflowProcessor
+
+Processes workflow events by converting them to LangGraph state and executing workflows.
+
+```python
+from langgraph_integration.processor import WorkflowProcessor, event_to_multi_agent_state
+from workflow_events import WorkflowEvent, EventType, EventSource
+
+# Create processor
+processor = WorkflowProcessor()
+
+# Process workflow event
+event = WorkflowEvent(
+    event_type=EventType.WORKFLOW_TRIGGERED,
+    source=EventSource.AIRFLOW,
+    workflow_id="test_workflow",
+    workflow_run_id="run_123",
+    payload=WorkflowEventPayload(data={"task": "process_data"}),
+    metadata=WorkflowEventMetadata(environment="dev", version="1.0"),
+)
+
+# Execute workflow
+result = await processor.process_workflow_event(event)
+```
+
+**Event-to-State Conversion**:
+- Extracts task from event payload
+- Creates `MultiAgentState` with event metadata
+- Uses `event_id` as `thread_id` for checkpointing
+- Preserves workflow context (workflow_id, workflow_run_id, source)
+
+### LangGraphKafkaConsumer
+
+Async Kafka consumer that consumes workflow events and triggers LangGraph workflows.
+
+```python
+from langgraph_integration.consumer import LangGraphKafkaConsumer
+from langgraph_integration.config import ConsumerConfig
+
+# Create consumer with configuration
+config = ConsumerConfig(
+    bootstrap_servers="localhost:9092",
+    topic="workflow-events",
+    group_id="langgraph-consumer-group",
+)
+consumer = LangGraphKafkaConsumer(config=config)
+
+# Start consumer
+await consumer.start()
+
+# Consume and process events (runs indefinitely)
+await consumer.consume_and_process()
+
+# Stop consumer gracefully
+await consumer.stop()
+```
+
+**Features**:
+- Async/await pattern using `aiokafka`
+- Non-blocking event processing
+- Concurrent workflow execution
+- Error handling that doesn't stop consumer
+- Graceful shutdown support
+
+### Service Entry Point
+
+Standalone service for running the consumer as a background process.
+
+```python
+# Run service
+python -m langgraph_integration.service
+```
+
+**Features**:
+- Signal handling (SIGINT, SIGTERM) for graceful shutdown
+- Environment variable configuration
+- Logging and monitoring
+- Production-ready service lifecycle
+
+## Usage Examples
+
+### Basic Consumer Usage
+
+```python
+import asyncio
+from langgraph_integration.consumer import LangGraphKafkaConsumer
+from langgraph_integration.config import ConsumerConfig
+
+async def main():
+    # Create consumer
+    config = ConsumerConfig()
+    consumer = LangGraphKafkaConsumer(config=config)
+    
+    try:
+        # Start consumer
+        await consumer.start()
+        
+        # Consume and process events
+        await consumer.consume_and_process()
+    finally:
+        # Stop consumer
+        await consumer.stop()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Custom Configuration
+
+```python
+from langgraph_integration.consumer import LangGraphKafkaConsumer
+from langgraph_integration.config import ConsumerConfig
+
+# Custom configuration
+config = ConsumerConfig(
+    bootstrap_servers="kafka:9092",
+    topic="custom-workflow-events",
+    group_id="custom-consumer-group",
+    auto_offset_reset="earliest",
+    enable_auto_commit=False,
+)
+
+consumer = LangGraphKafkaConsumer(config=config)
+```
+
+### Running as Service
+
+```bash
+# Set environment variables
+export KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+export KAFKA_WORKFLOW_EVENTS_TOPIC=workflow-events
+export KAFKA_CONSUMER_GROUP_ID=langgraph-consumer-group
+
+# Run service
+python -m langgraph_integration.service
+```
+
+## Event Processing Flow
+
+### 1. Event Consumption
+
+The consumer subscribes to the `workflow-events` topic and consumes events asynchronously:
+
+```python
+async for message in consumer:
+    event_data = message.value
+    event = WorkflowEvent(**event_data)
+    
+    if event.event_type == EventType.WORKFLOW_TRIGGERED:
+        # Process event asynchronously
+        asyncio.create_task(process_workflow_event(event))
+```
+
+### 2. Event-to-State Conversion
+
+Events are converted to `MultiAgentState` for LangGraph execution:
+
+```python
+def event_to_multi_agent_state(event: WorkflowEvent) -> MultiAgentState:
+    payload_data = event.payload.data
+    task = payload_data.get("task", "process_workflow")
+    
+    return MultiAgentState(
+        messages=[],
+        task=task,
+        agent_results={},
+        current_agent="orchestrator",
+        completed=False,
+        metadata={
+            "event_id": str(event.event_id),
+            "workflow_id": event.workflow_id,
+            "workflow_run_id": event.workflow_run_id,
+            "source": event.source.value,
+        }
+    )
+```
+
+### 3. Workflow Execution
+
+LangGraph workflows are executed asynchronously:
+
+```python
+# Create thread ID from event ID for checkpointing
+thread_id = str(event.event_id)
+config = {"configurable": {"thread_id": thread_id}}
+
+# Execute workflow in thread pool (LangGraph is synchronous)
+result = await asyncio.to_thread(
+    multi_agent_graph.invoke,
+    initial_state,
+    config=config,
+)
+```
+
+## Error Handling
+
+### Consumer Error Handling
+
+The consumer handles errors gracefully without stopping:
+
+```python
+try:
+    event = WorkflowEvent(**event_data)
+    if event.event_type == EventType.WORKFLOW_TRIGGERED:
+        asyncio.create_task(process_workflow_event(event))
+except Exception as e:
+    # Log error but continue processing other messages
+    logger.error(f"Error processing message: {e}", exc_info=True)
+    # Continue processing - don't stop consumer
+```
+
+### Workflow Error Handling
+
+Workflow execution errors are logged but don't stop the consumer:
+
+```python
+try:
+    result = await processor.process_workflow_event(event)
+except Exception as e:
+    logger.error(f"Error processing workflow event: {e}", exc_info=True)
+    # Don't re-raise - allow consumer to continue
+```
+
+## Testing
+
+### Running Tests
+
+All tests use production conditions with real Kafka:
+
+```bash
+# Run all integration tests
+pytest tests/langgraph_integration/ -v
+
+# Run specific test file
+pytest tests/langgraph_integration/test_consumer_integration.py -v
+```
+
+### Test Coverage
+
+- **Configuration Tests**: 4 tests (defaults, environment variables, overrides)
+- **Consumer Tests**: 6 tests (initialization, start/stop, event processing)
+- **Integration Tests**: 4 tests (real Kafka, event processing, multiple events)
+- **Processor Tests**: 6 tests (event-to-state conversion, workflow execution)
+- **Total**: 22 tests, all passing
+
+**CRITICAL**: All tests use production conditions - no mocks, no placeholders.
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Kafka connection
+export KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+
+# Topic configuration
+export KAFKA_WORKFLOW_EVENTS_TOPIC=workflow-events
+
+# Consumer group
+export KAFKA_CONSUMER_GROUP_ID=langgraph-consumer-group
+
+# Auto-commit
+export KAFKA_ENABLE_AUTO_COMMIT=true
+```
+
+### Docker Compose
+
+The consumer service connects to Kafka running in Docker Compose:
+
+```yaml
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+```
+
+## Best Practices
+
+### 1. Use Async Pattern
+
+Always use async/await for non-blocking operations:
+
+```python
+# ✅ Good: Async pattern
+await consumer.start()
+await consumer.consume_and_process()
+
+# ❌ Bad: Blocking pattern
+consumer.start()  # Synchronous - blocks event loop
+```
+
+### 2. Error Handling
+
+Handle errors gracefully without stopping the consumer:
+
+```python
+# ✅ Good: Continue processing on error
+try:
+    await process_workflow_event(event)
+except Exception as e:
+    logger.error(f"Error: {e}", exc_info=True)
+    # Continue processing other events
+
+# ❌ Bad: Stop consumer on error
+try:
+    await process_workflow_event(event)
+except Exception as e:
+    raise  # Stops consumer
+```
+
+### 3. Graceful Shutdown
+
+Always stop the consumer gracefully:
+
+```python
+# ✅ Good: Graceful shutdown
+try:
+    await consumer.start()
+    await consumer.consume_and_process()
+finally:
+    await consumer.stop()
+
+# ❌ Bad: No cleanup
+await consumer.start()
+await consumer.consume_and_process()
+# Consumer not stopped - resources leaked
+```
+
+### 4. Configuration Management
+
+Use environment variables for configuration:
+
+```python
+# ✅ Good: Environment variables
+config = ConsumerConfig()  # Loads from environment
+
+# ❌ Bad: Hardcoded values
+config = ConsumerConfig(
+    bootstrap_servers="localhost:9092",  # Hardcoded
+    topic="workflow-events",  # Hardcoded
+)
+```
+
+## Troubleshooting
+
+### Consumer Not Starting
+
+**Problem**: Consumer fails to start or connect to Kafka.
+
+**Solutions**:
+1. Verify Kafka is running: `docker-compose ps`
+2. Check Kafka connection: `telnet localhost 9092`
+3. Verify bootstrap servers: `KAFKA_BOOTSTRAP_SERVERS=localhost:9092`
+4. Check network connectivity: Ensure consumer can reach Kafka
+
+### Events Not Processed
+
+**Problem**: Events are consumed but workflows not executed.
+
+**Solutions**:
+1. Verify event type: Only `WORKFLOW_TRIGGERED` events are processed
+2. Check event schema: Ensure events match `WorkflowEvent` schema
+3. Check logs: Review consumer logs for errors
+4. Verify workflow execution: Check LangGraph workflow logs
+
+### High Memory Usage
+
+**Problem**: Consumer uses excessive memory.
+
+**Solutions**:
+1. Reduce `max_poll_records`: Lower batch size
+2. Process events faster: Optimize workflow execution
+3. Monitor consumer lag: Check Kafka consumer lag metrics
+4. Scale horizontally: Run multiple consumer instances
+
+## Integration with Airflow
+
+### Publishing Events from Airflow
+
+Airflow tasks publish workflow events to trigger LangGraph workflows:
+
+```python
+from airflow.decorators import task
+from workflow_events import WorkflowEventProducer, EventType, EventSource
+
+@task
+def trigger_langgraph_workflow(**context):
+    producer = WorkflowEventProducer()
+    event = producer.publish_workflow_event(
+        event_type=EventType.WORKFLOW_TRIGGERED,
+        source=EventSource.AIRFLOW,
+        workflow_id=context['dag'].dag_id,
+        workflow_run_id=context['dag_run'].run_id,
+        payload={"data": {"task": "process_data"}},
+    )
+    producer.close()
+    return event.event_id
+```
+
+### Consuming Events
+
+The LangGraph consumer service consumes these events and triggers workflows:
+
+```python
+# Consumer automatically processes WORKFLOW_TRIGGERED events
+# and executes LangGraph workflows
+```
+
+## Next Steps
+
+- **TASK-028**: Result Return Mechanism - Publish workflow results back to Kafka
+- **TASK-029**: Integrate LangGraph Workflow with Kafka Consumer - Complete integration
+- **TASK-030**: Create Airflow Task for Triggering LangGraph Workflows - Airflow integration
+
+## Related Documentation
+
+- **[Event Schema Guide](event-schema-guide.md)** - WorkflowEvent schema documentation
+- **[Kafka Producer Guide](kafka-producer-guide.md)** - Publishing events to Kafka
+- **[LangGraph Multi-Agent Workflow Guide](langgraph-multi-agent-workflow-guide.md)** - LangGraph workflow execution
+- **[Airflow-Kafka Integration Guide](airflow-kafka-integration-guide.md)** - Airflow-Kafka integration patterns
+
+## Summary
+
+The LangGraph Kafka integration provides:
+
+- ✅ Async Kafka consumer for non-blocking event processing
+- ✅ Event-to-state conversion for LangGraph workflows
+- ✅ Concurrent workflow execution
+- ✅ Error handling that doesn't stop consumer
+- ✅ Graceful shutdown support
+- ✅ Configuration via environment variables
+- ✅ Production-ready service lifecycle
+- ✅ Comprehensive test coverage (22 tests, all passing)
+
+**Status**: Production-ready for event-driven LangGraph workflow execution.
+

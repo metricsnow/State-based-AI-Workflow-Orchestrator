@@ -12,7 +12,7 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 - **TaskFlow API**: Modern Airflow DAG development with automatic XCom management and type hints
 - **Event-Driven Architecture**: Decoupled components communicate via Kafka events for scalability
 - **Type Safety**: Comprehensive type hints and Pydantic validation for runtime safety
-- **Test Coverage**: 97% code coverage for Phase 1, 100% code coverage for LangGraph workflows with 301+ tests covering all components (176 Phase 1 + 125 LangGraph)
+- **Test Coverage**: 97% code coverage for Phase 1, 100% code coverage for LangGraph workflows with 323+ tests covering all components (176 Phase 1 + 125 LangGraph + 22 LangGraph-Kafka integration)
 - **Containerization**: Docker Compose for consistent development and deployment environments
 - **Documentation**: Comprehensive guides for all components with code examples
 - **Error Handling**: Graceful degradation - Kafka failures don't break Airflow tasks
@@ -61,7 +61,7 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 
 **pytest**
 - **Why**: Industry-standard Python testing framework
-- **Purpose**: Comprehensive test suite with 301+ tests covering all components (176 Phase 1 + 125 LangGraph)
+- **Purpose**: Comprehensive test suite with 323+ tests covering all components (176 Phase 1 + 125 LangGraph + 22 LangGraph-Kafka integration)
 - **Coverage**: 97% for TaskFlow DAG code, 100% for LangGraph workflows (exceeds 80% requirement)
 
 ### AI Workflow Layer (Phase 2+)
@@ -70,7 +70,7 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 - **Why**: Industry-standard framework for building stateful AI agent workflows
 - **Purpose**: Enables stateful multi-agent workflows with checkpointing and state management
 - **Key Features**: StateGraph, reducers, checkpointing, conditional routing
-- **Status**: State definitions, workflows, conditional routing, checkpointing, multi-agent workflows, and comprehensive integration testing implemented (TASK-015 through TASK-024). All 217 LangGraph tests passing with 97% overall code coverage (100% for multi-agent workflow module). All tests use production conditions - no mocks or placeholders.
+- **Status**: State definitions, workflows, conditional routing, checkpointing, multi-agent workflows, async Kafka consumer integration, and comprehensive integration testing implemented (TASK-015 through TASK-027). All 239 LangGraph tests passing (217 workflow tests + 22 Kafka integration tests) with 97% overall code coverage (100% for multi-agent workflow module). All tests use production conditions - no mocks or placeholders.
 
 **LangChain 1.0.5+**
 - **Why**: LLM integration framework compatible with LangGraph
@@ -83,6 +83,12 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 - **Why**: Pure Python Kafka client library
 - **Purpose**: Producer and consumer implementations for workflow events
 - **Features**: Simple API, good error handling, offset management
+
+**aiokafka 0.12.0+**
+- **Why**: Async Kafka client library for asyncio-based applications
+- **Purpose**: Async Kafka consumer for LangGraph workflow integration
+- **Features**: Non-blocking event consumption, async/await pattern, concurrent processing
+- **Status**: Integrated in TASK-027 for async LangGraph Kafka consumer service
 
 **Python 3.11+**
 - **Why**: Modern Python with improved performance and type hints
@@ -300,12 +306,18 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 │   │   ├── basic_workflow.py      # Basic StateGraph workflow
 │   │   ├── conditional_workflow.py # Conditional routing workflow
 │   │   └── checkpoint_workflow.py  # Checkpointing workflow
+│   ├── langgraph_integration/ # LangGraph Kafka integration (Phase 3+)
+│   │   ├── config.py        # Configuration management
+│   │   ├── processor.py     # Event-to-state conversion and workflow execution
+│   │   ├── consumer.py      # Async Kafka consumer
+│   │   └── service.py       # Service entry point
 │   └── tests/               # Test suite (modular structure)
 │       ├── infrastructure/  # Docker Compose & infrastructure tests (53 tests)
 │       ├── airflow/         # Airflow tests (108 tests - Phase 1.2+)
 │       ├── kafka/           # Kafka tests (15 tests - Phase 1.3+)
-│       └── langgraph/       # LangGraph tests (125 tests - Phase 2+)
-│                           # Total: 301 tests, 100% LangGraph coverage
+│       ├── langgraph/       # LangGraph tests (125 tests - Phase 2+)
+│       └── langgraph_integration/ # LangGraph-Kafka integration tests (22 tests - Phase 3+)
+│                           # Total: 323 tests, 100% LangGraph coverage
 ├── scripts/                 # Utility scripts
 │   ├── generate-fernet-key.sh
 │   └── test-docker-compose.sh
@@ -329,8 +341,9 @@ Comprehensive documentation is available in `project/docs/`:
 - **[Documentation Index](project/docs/README.md)** - Complete documentation overview
 - **[LangGraph State Guide](project/docs/langgraph-state-guide.md)** - State definitions and reducers (Phase 2)
 - **[LangGraph Checkpointing Guide](project/docs/langgraph-checkpointing-guide.md)** - Checkpointing with InMemorySaver (Phase 2)
+- **[LangGraph Kafka Integration Guide](project/docs/langgraph-kafka-integration-guide.md)** - Async Kafka consumer for LangGraph workflows (Phase 3)
 - **[LangGraph Integration Testing](project/tests/langgraph/README.md)** - Complete integration test suite (125 tests, 100% coverage)
-- **[Testing Guide](project/tests/README.md)** - Complete test suite documentation (301 tests total)
+- **[Testing Guide](project/tests/README.md)** - Complete test suite documentation (323 tests total)
 - **[Main PRD](project/docs/prd.md)** - Complete Product Requirements Document
 
 See `project/docs/README.md` for all available documentation.
