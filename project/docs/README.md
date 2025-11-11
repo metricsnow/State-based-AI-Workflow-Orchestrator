@@ -52,6 +52,11 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
   - Routing functions, conditional edges, dynamic workflow execution
   - Multiple routing patterns, error handling, best practices
   - 25 comprehensive tests, all passing
+- **[LangGraph Checkpointing Guide](langgraph-checkpointing-guide.md)** - Checkpointing with InMemorySaver
+  - ✅ TASK-018: Checkpointing Configuration and Testing (Complete)
+  - InMemorySaver checkpointer, state persistence, workflow resumption
+  - Thread ID management, checkpoint save/load, state merging
+  - 22 comprehensive tests, all passing
 
 ### Main PRD
 - **[Main PRD](prd.md)** - Complete product requirements document
@@ -92,7 +97,8 @@ docs/
 ├── kafka-consumer-guide.md     # Kafka consumer usage guide (TASK-012)
 ├── kafka-setup-guide.md        # Kafka infrastructure setup (TASK-009)
 ├── langgraph-state-guide.md    # LangGraph state definitions (TASK-015)
-└── langgraph-conditional-routing-guide.md  # Conditional routing (TASK-017)
+├── langgraph-conditional-routing-guide.md  # Conditional routing (TASK-017)
+└── langgraph-checkpointing-guide.md  # Checkpointing (TASK-018)
 ```
 
 ## Security Requirements
@@ -144,10 +150,11 @@ See [Testing Guide](testing-guide-phase1.md) and [Test Suite README](../tests/RE
 - ✅ TASK-015: State Definition and Reducers Implementation (Complete - 26 tests)
 - ✅ TASK-016: Basic StateGraph with Nodes Implementation (Complete - 18 tests)
 - ✅ TASK-017: Conditional Routing Implementation (Complete - 25 tests)
-- **Total Tests**: 73 LangGraph tests (all passing)
-- **Status**: Conditional routing complete, ready for checkpointing
+- ✅ TASK-018: Checkpointing Configuration and Testing (Complete - 22 tests)
+- **Total Tests**: 95 LangGraph tests (all passing)
+- **Status**: Checkpointing complete, ready for integration tests
 
-**Next Tasks**: TASK-018 (Checkpointing), TASK-019 (Integration Tests), TASK-020 (Multi-Agent State)
+**Next Tasks**: TASK-019 (Stateful Workflow Integration Tests), TASK-020 (Multi-Agent State Structure Design)
 
 ## Contributing
 

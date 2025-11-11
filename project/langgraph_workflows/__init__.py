@@ -10,6 +10,13 @@ from langgraph_workflows.basic_workflow import (
     node_a,
     node_b,
 )
+from langgraph_workflows.checkpoint_workflow import (
+    checkpoint_graph,
+    execute_with_checkpoint,
+    get_checkpoint_state,
+    list_checkpoints,
+    resume_workflow,
+)
 from langgraph_workflows.conditional_workflow import (
     error_handler,
     execute_conditional_workflow,
@@ -49,5 +56,11 @@ __all__ = [
     "should_continue",
     "conditional_graph",
     "execute_conditional_workflow",
+    # Checkpoint workflow
+    "checkpoint_graph",
+    "execute_with_checkpoint",
+    "resume_workflow",
+    "get_checkpoint_state",
+    "list_checkpoints",
 ]
 

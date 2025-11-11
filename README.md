@@ -10,12 +10,12 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 
 Phase 1 is complete with foundational infrastructure including Airflow TaskFlow API for modern DAG development, Kafka for event streaming, and comprehensive event schema validation using Pydantic. The system has 176 passing tests, 97% code coverage, and complete documentation.
 
-Phase 2 (AI Workflow Foundation) is in progress with LangGraph state definitions and reducers implemented. The system now includes LangGraph state schemas (WorkflowState, SimpleState) with proper reducers for state management. Future phases will add StateGraph workflows, multi-agent systems, local LLM deployment with Ollama, and production infrastructure with Kubernetes, ultimately creating a complete intelligent orchestration platform that can automate complex trading operations workflows with both reliability and intelligence.
+Phase 2 (AI Workflow Foundation) is in progress with LangGraph state definitions, workflows, and checkpointing implemented. The system now includes LangGraph state schemas (WorkflowState, SimpleState) with proper reducers, StateGraph workflows with conditional routing, and checkpointing with InMemorySaver for state persistence. Future phases will add multi-agent systems, local LLM deployment with Ollama, and production infrastructure with Kubernetes, ultimately creating a complete intelligent orchestration platform that can automate complex trading operations workflows with both reliability and intelligence.
 
 - **TaskFlow API**: Modern Airflow DAG development with automatic XCom management and type hints
 - **Event-Driven Architecture**: Decoupled components communicate via Kafka events for scalability
 - **Type Safety**: Comprehensive type hints and Pydantic validation for runtime safety
-- **Test Coverage**: 97% code coverage with 207 tests covering all components (176 Phase 1 + 31 LangGraph)
+- **Test Coverage**: 97% code coverage with 250+ tests covering all components (176 Phase 1 + 95 LangGraph)
 - **Containerization**: Docker Compose for consistent development and deployment environments
 - **Documentation**: Comprehensive guides for all components with code examples
 - **Error Handling**: Graceful degradation - Kafka failures don't break Airflow tasks
@@ -64,7 +64,7 @@ Phase 2 (AI Workflow Foundation) is in progress with LangGraph state definitions
 
 **pytest**
 - **Why**: Industry-standard Python testing framework
-- **Purpose**: Comprehensive test suite with 207 tests covering all components (176 Phase 1 + 31 LangGraph)
+- **Purpose**: Comprehensive test suite with 250+ tests covering all components (176 Phase 1 + 95 LangGraph)
 - **Coverage**: 97% for TaskFlow DAG code (exceeds 80% requirement)
 
 ### AI Workflow Layer (Phase 2+)
@@ -73,7 +73,7 @@ Phase 2 (AI Workflow Foundation) is in progress with LangGraph state definitions
 - **Why**: Industry-standard framework for building stateful AI agent workflows
 - **Purpose**: Enables stateful multi-agent workflows with checkpointing and state management
 - **Key Features**: StateGraph, reducers, checkpointing, conditional routing
-- **Status**: State definitions and reducers implemented (TASK-015)
+- **Status**: State definitions, workflows, conditional routing, and checkpointing implemented (TASK-015 through TASK-018)
 
 **LangChain 1.0.5+**
 - **Why**: LLM integration framework compatible with LangGraph
@@ -299,7 +299,10 @@ Phase 2 (AI Workflow Foundation) is in progress with LangGraph state definitions
 │   │   ├── prd.md          # Product Requirements Document
 │   │   └── prd_phase*.md   # Phase-specific PRDs
 │   ├── langgraph_workflows/ # LangGraph state and workflow definitions (Phase 2+)
-│   │   └── state.py         # State schemas and reducers
+│   │   ├── state.py         # State schemas and reducers
+│   │   ├── basic_workflow.py      # Basic StateGraph workflow
+│   │   ├── conditional_workflow.py # Conditional routing workflow
+│   │   └── checkpoint_workflow.py  # Checkpointing workflow
 │   └── tests/               # Test suite (modular structure)
 │       ├── infrastructure/  # Docker Compose & infrastructure tests
 │       ├── airflow/         # Airflow tests (Phase 1.2+)
@@ -327,6 +330,7 @@ Comprehensive documentation is available in `project/docs/`:
 
 - **[Documentation Index](project/docs/README.md)** - Complete documentation overview
 - **[LangGraph State Guide](project/docs/langgraph-state-guide.md)** - State definitions and reducers (Phase 2)
+- **[LangGraph Checkpointing Guide](project/docs/langgraph-checkpointing-guide.md)** - Checkpointing with InMemorySaver (Phase 2)
 - **[Testing Guide](project/tests/README.md)** - Complete test suite documentation
 - **[Main PRD](project/docs/prd.md)** - Complete Product Requirements Document
 
