@@ -30,6 +30,11 @@ from langgraph_workflows.agent_nodes import (
     data_agent,
     data_agent_with_error_handling,
 )
+from langgraph_workflows.orchestrator_agent import (
+    orchestrator_agent,
+    orchestrator_agent_with_errors,
+    route_to_agent,
+)
 from langgraph_workflows.state import (
     MultiAgentState,
     SimpleState,
@@ -62,6 +67,10 @@ __all__ = [
     "analysis_agent",
     "data_agent_with_error_handling",
     "analysis_agent_with_error_handling",
+    # Orchestrator agent
+    "orchestrator_agent",
+    "orchestrator_agent_with_errors",
+    "route_to_agent",
     # Basic workflow
     "node_a",
     "node_b",

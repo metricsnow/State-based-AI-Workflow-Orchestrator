@@ -198,9 +198,8 @@ class TestDataAgentErrorHandling:
         assert result["agent_results"]["data"]["result"] == "data_processed"
 
     def test_data_agent_with_error_handling_exception(self) -> None:
-        """Test error handling version catches exceptions."""
-        # Create a state that would cause an error if we tried to access invalid keys
-        # We'll mock an error scenario
+        """Test error handling version handles production state correctly."""
+        # Production state - error handling should work with real state
         state: MultiAgentState = {
             "messages": [],
             "task": "Process customer data for monthly analytics report",
@@ -210,13 +209,13 @@ class TestDataAgentErrorHandling:
             "metadata": {},
         }
 
-        # The function should handle errors gracefully
-        # Since the current implementation doesn't raise errors, we test the structure
+        # Test with production conditions - function should handle state correctly
         result = data_agent_with_error_handling(state)
 
-        # Should return valid result structure
+        # Should return valid result structure with production data
         assert "agent_results" in result
         assert "current_agent" in result
+        assert "data" in result["agent_results"]
 
 
 class TestAnalysisAgentErrorHandling:
