@@ -145,23 +145,26 @@ class TestLoadTask:
         """Test that load_data requires data parameter (TaskFlow API)."""
         # TaskFlow API: data is passed as function argument, not via context
         result = load_data(sample_transformed_data)
-        # load_data returns None, so we just check it doesn't raise
-        assert result is None, \
-            "load_data should execute without errors and return None"
+        # load_data returns a dict with load results
+        assert isinstance(result, dict), \
+            "load_data should return a dictionary with load results"
+        assert "status" in result, "load_data result should contain 'status'"
+        assert result["status"] == "success", "load_data should return success status"
 
     def test_load_data_processes_data(self, sample_transformed_data):
         """Test that load_data processes transformed data."""
-        # Should not raise an error
         result = load_data(sample_transformed_data)
-        # load_data returns None, so we just verify it executes
-        assert result is None, "load_data should process data without errors"
+        assert isinstance(result, dict), "load_data should return a dictionary"
+        assert "records_loaded" in result, "load_data result should contain 'records_loaded'"
+        assert result["records_loaded"] == len(sample_transformed_data["transformed_data"]), \
+            "load_data should report correct number of records loaded"
 
     def test_load_data_handles_empty_data(self):
         """Test that load_data handles empty transformed data."""
         empty_data = {'transformed_data': []}
-        # Should not raise an error
         result = load_data(empty_data)
-        assert result is None, "load_data should handle empty data"
+        assert isinstance(result, dict), "load_data should return a dictionary"
+        assert result["records_loaded"] == 0, "load_data should report 0 records for empty data"
 
 
 class TestTaskFunctionIntegration:

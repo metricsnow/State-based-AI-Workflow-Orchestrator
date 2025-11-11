@@ -12,7 +12,10 @@ from typing import Generator, Dict, List
 def docker_compose_file() -> str:
     """Return the path to docker-compose.yml."""
     # Navigate from project/tests/infrastructure/ to root/docker-compose.yml
-    return os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "docker-compose.yml")
+    # __file__ is at project/tests/infrastructure/conftest.py
+    # Go up 4 levels: infrastructure -> tests -> project -> root
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+    return os.path.join(root_dir, "docker-compose.yml")
 
 
 @pytest.fixture(scope="session")
