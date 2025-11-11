@@ -114,6 +114,7 @@ docker-compose logs -f
 - Kafka: `healthy`
 - Airflow Webserver: `healthy`
 - Airflow Scheduler: `running`
+- Ollama: `healthy` (after 40s start_period)
 
 ### Step 7: Initialize Airflow
 
@@ -242,6 +243,24 @@ After setup, your project structure should be:
 - **User**: `airflow`
 - **Password**: `airflow` (from docker-compose.yml)
 
+### Ollama
+- **Host**: `ollama` (from within Docker network) or `localhost` (from host)
+- **Port**: `11434` (API port)
+- **API Endpoint**: `http://ollama:11434` (from containers) or `http://localhost:11434` (from host)
+- **Volume**: `ollama_data` (persists models at `/root/.ollama`)
+- **Health Check**: Monitors `/api/tags` endpoint
+- **Usage**: 
+  ```bash
+  # From host
+  curl http://localhost:11434/api/tags
+  
+  # From Airflow container
+  docker exec airflow-webserver curl http://ollama:11434/api/tags
+  
+  # Pull a model
+  docker exec airflow-ollama ollama pull llama2
+  ```
+
 ## Troubleshooting
 
 ### Services Not Starting
@@ -255,6 +274,15 @@ After setup, your project structure should be:
    ```bash
    lsof -i :8080  # Airflow
    lsof -i :9092  # Kafka
+   lsof -i :11434 # Ollama
+   ```
+   
+   **Note**: If you have a native Ollama service running, stop it before starting the Docker service:
+   ```bash
+   # Check for native Ollama
+   ps aux | grep ollama
+   # Stop native service if needed
+   kill <ollama-pid>
    ```
 
 3. **Check logs**:
@@ -323,8 +351,13 @@ After successful setup:
    - Example DAG `example_etl_dag` is available in Airflow UI
    - DAG demonstrates ETL pattern with XCom data passing
    - Located at: `project/dags/example_etl_dag.py`
-4. **TASK-004**: DAG Validation and Testing (Next)
-5. **TASK-005**: Migrate DAGs to TaskFlow API
+4. ✅ **TASK-025 Complete**: Ollama Service Docker Integration
+   - Ollama service available in Docker Compose
+   - Accessible from Airflow and other containers via `airflow-network`
+   - Volume persistence configured for model storage
+   - Health checks configured and monitoring
+5. **TASK-004**: DAG Validation and Testing (Next)
+6. **TASK-005**: Migrate DAGs to TaskFlow API
 
 See `project/dev/tasks/` for task details.
 
