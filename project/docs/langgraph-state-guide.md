@@ -48,6 +48,31 @@ state: SimpleState = {
 - `data`: `Annotated[dict[str, Any], merge_dicts]` - Workflow data with merge reducer
 - `status`: `Annotated[str, last_value]` - Status with last_value reducer
 
+### MultiAgentState
+
+State schema for multi-agent LangGraph workflows with orchestrator-worker patterns. Supports agent coordination, result aggregation, and workflow management.
+
+```python
+from langgraph_workflows.state import MultiAgentState
+
+state: MultiAgentState = {
+    "messages": [],
+    "task": "process_data",
+    "agent_results": {},
+    "current_agent": "orchestrator",
+    "completed": False,
+    "metadata": {}
+}
+```
+
+**Fields**:
+- `messages`: `Annotated[list[Any], add_messages]` - Message list with add_messages reducer
+- `task`: `Annotated[str, last_value]` - Current task string with last_value reducer
+- `agent_results`: `Annotated[dict[str, Any], merge_agent_results]` - Agent results with merge reducer
+- `current_agent`: `Annotated[str, last_value]` - Current active agent with last_value reducer
+- `completed`: `Annotated[bool, last_value]` - Workflow completion status with last_value reducer
+- `metadata`: `Annotated[dict[str, Any], merge_dicts]` - Metadata with merge reducer
+
 ## Reducers
 
 Reducers specify how state updates are applied. They enable proper state aggregation and prevent overwriting existing values.
@@ -102,6 +127,29 @@ current = last_value("initialized", "processing")
 # current = "processing"
 ```
 
+### merge_agent_results
+
+Custom reducer for agent results aggregation. Merges agent results dictionaries with new values taking precedence.
+
+```python
+from langgraph_workflows.state import merge_agent_results
+
+def merge_agent_results(x: dict[str, Any], y: dict[str, Any]) -> dict[str, Any]:
+    """Merge agent results, with y taking precedence for conflicts."""
+    return {**x, **y}
+```
+
+**Usage**:
+```python
+existing = {"data": {"agent": "data", "result": "processed"}}
+update = {"analysis": {"agent": "analysis", "result": "complete"}}
+result = merge_agent_results(existing, update)
+# result = {
+#     "data": {"agent": "data", "result": "processed"},
+#     "analysis": {"agent": "analysis", "result": "complete"}
+# }
+```
+
 ## State Validation
 
 ### validate_state
@@ -145,6 +193,32 @@ assert validate_simple_state(state)  # True
 **Required Fields**:
 - `data`
 - `status`
+
+### validate_multi_agent_state
+
+Validates MultiAgentState structure and required fields.
+
+```python
+from langgraph_workflows.state import validate_multi_agent_state, MultiAgentState
+
+state: MultiAgentState = {
+    "messages": [],
+    "task": "test_task",
+    "agent_results": {},
+    "current_agent": "orchestrator",
+    "completed": False,
+    "metadata": {}
+}
+
+assert validate_multi_agent_state(state)  # True
+```
+
+**Required Fields**:
+- `messages`
+- `task`
+- `agent_results`
+- `current_agent`
+- `completed`
 
 ## Usage Examples
 
@@ -206,7 +280,7 @@ new_status = last_value(current_status, "processing")
 
 2. **Validate state before processing**: Use `validate_state()` or `validate_simple_state()` to ensure state structure is correct.
 
-3. **Use appropriate state schema**: Use `WorkflowState` for complex multi-agent workflows, `SimpleState` for basic workflows.
+3. **Use appropriate state schema**: Use `WorkflowState` for complex workflows with task data, `MultiAgentState` for orchestrator-worker multi-agent patterns, `SimpleState` for basic workflows.
 
 4. **Type hints are required**: Always use type hints (`WorkflowState`, `SimpleState`) for better IDE support and type checking.
 
@@ -225,15 +299,16 @@ pytest project/tests/langgraph/test_state.py --cov=project/langgraph_workflows/s
 ```
 
 **Test Coverage**:
-- State creation (3 tests)
+- State creation (6 tests: 3 WorkflowState, 3 MultiAgentState)
 - Message reducer (3 tests)
 - Data reducer (4 tests)
+- Agent results reducer (4 tests)
 - Status reducer (3 tests)
-- State validation (7 tests)
-- State updates (4 tests)
-- Type hints (2 tests)
+- State validation (12 tests: 7 WorkflowState, 5 MultiAgentState)
+- State updates (9 tests: 4 WorkflowState, 5 MultiAgentState)
+- Type hints (3 tests: 2 WorkflowState, 1 MultiAgentState)
 
-**Total**: 26 tests, all passing
+**Total**: 45 tests, all passing
 
 ## Implementation Details
 
@@ -261,13 +336,17 @@ project/langgraph_workflows/
 
 - [LangGraph Official Documentation](https://langchain-ai.github.io/langgraph/)
 - [State Management Patterns](https://langchain-ai.github.io/langgraph/concepts/low_level/#reducers)
-- [Task Documentation](../dev/tasks/TASK-015.md)
+- [Task Documentation](../dev/tasks/TASK-015.md) - State definitions
+- [Task Documentation](../dev/tasks/TASK-020.md) - Multi-Agent State Structure
 
 ## Next Steps
 
 - ✅ TASK-016: Basic StateGraph with Nodes Implementation (Complete)
 - ✅ TASK-017: Conditional Routing Implementation (Complete)
-- TASK-018: Checkpointing Configuration and Testing
+- ✅ TASK-018: Checkpointing Configuration and Testing (Complete)
+- ✅ TASK-019: Stateful Workflow Integration Tests (Complete)
+- ✅ TASK-020: Multi-Agent State Structure Design (Complete)
+- TASK-021: Specialized Agent Nodes Implementation
 
 ## Related Guides
 

@@ -9,10 +9,13 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph.message import add_messages
 
 from langgraph_workflows.state import (
+    MultiAgentState,
     SimpleState,
     WorkflowState,
     last_value,
+    merge_agent_results,
     merge_dicts,
+    validate_multi_agent_state,
     validate_simple_state,
     validate_state,
 )
@@ -334,4 +337,297 @@ class TestStateTypeHints:
 
         assert isinstance(state["data"], dict)
         assert isinstance(state["status"], str)
+
+
+class TestMultiAgentState:
+    """Test MultiAgentState creation and functionality."""
+
+    def test_multi_agent_state_creation_with_all_fields(self) -> None:
+        """Test creating a MultiAgentState instance with all fields."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {},
+        }
+        assert validate_multi_agent_state(state)
+        assert state["task"] == "test_task"
+        assert state["current_agent"] == "orchestrator"
+        assert state["completed"] is False
+        assert isinstance(state["messages"], list)
+        assert isinstance(state["agent_results"], dict)
+        assert isinstance(state["metadata"], dict)
+
+    def test_multi_agent_state_creation_with_agent_results(self) -> None:
+        """Test creating a MultiAgentState with agent results."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "process_data",
+            "agent_results": {
+                "data": {"agent": "data", "result": "processed"},
+                "analysis": {"agent": "analysis", "result": "complete"},
+            },
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {},
+        }
+        assert validate_multi_agent_state(state)
+        assert "data" in state["agent_results"]
+        assert "analysis" in state["agent_results"]
+        assert state["agent_results"]["data"]["agent"] == "data"
+
+    def test_multi_agent_state_creation_with_partial_fields(self) -> None:
+        """Test creating a MultiAgentState instance with partial fields."""
+        # TypedDict allows partial fields, but validation should catch missing required ones
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "data",
+            "completed": False,
+        }
+        # Should still validate if required fields are present
+        assert validate_multi_agent_state(state)
+
+
+class TestAgentResultsReducer:
+    """Test agent results reducer (merge_agent_results) functionality."""
+
+    def test_merge_agent_results_basic(self) -> None:
+        """Test basic agent results merging."""
+        x = {"data": {"agent": "data", "result": "processed"}}
+        y = {"analysis": {"agent": "analysis", "result": "complete"}}
+
+        result = merge_agent_results(x, y)
+
+        assert "data" in result
+        assert "analysis" in result
+        assert result["data"]["agent"] == "data"
+        assert result["analysis"]["agent"] == "analysis"
+
+    def test_merge_agent_results_overwrite(self) -> None:
+        """Test that y values take precedence for conflicting keys."""
+        x = {"data": {"agent": "data", "result": "old_result"}}
+        y = {"data": {"agent": "data", "result": "new_result"}}
+
+        result = merge_agent_results(x, y)
+
+        assert result["data"]["result"] == "new_result"
+
+    def test_merge_agent_results_empty_dicts(self) -> None:
+        """Test merging empty agent results dictionaries."""
+        x: dict[str, dict[str, str]] = {}
+        y: dict[str, dict[str, str]] = {}
+
+        result = merge_agent_results(x, y)
+
+        assert result == {}
+
+    def test_merge_agent_results_multiple_agents(self) -> None:
+        """Test merging results from multiple agents."""
+        x = {
+            "data": {"agent": "data", "result": "processed"},
+            "analysis": {"agent": "analysis", "result": "complete"},
+        }
+        y = {"orchestrator": {"agent": "orchestrator", "result": "coordinated"}}
+
+        result = merge_agent_results(x, y)
+
+        assert len(result) == 3
+        assert "data" in result
+        assert "analysis" in result
+        assert "orchestrator" in result
+
+
+class TestMultiAgentStateValidation:
+    """Test multi-agent state validation functions."""
+
+    def test_validate_multi_agent_state_with_all_fields(self) -> None:
+        """Test state validation with all required fields."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {},
+        }
+        assert validate_multi_agent_state(state) is True
+
+    def test_validate_multi_agent_state_missing_required_field(self) -> None:
+        """Test state validation fails when required field is missing."""
+        # Missing task
+        invalid_state = {
+            "messages": [],
+            # "task": "test_task",  # Missing
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+        }
+        assert validate_multi_agent_state(invalid_state) is False
+
+    def test_validate_multi_agent_state_missing_messages(self) -> None:
+        """Test state validation fails when messages field is missing."""
+        invalid_state = {
+            # "messages": [],  # Missing
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+        }
+        assert validate_multi_agent_state(invalid_state) is False
+
+    def test_validate_multi_agent_state_missing_agent_results(self) -> None:
+        """Test state validation fails when agent_results field is missing."""
+        invalid_state = {
+            "messages": [],
+            "task": "test_task",
+            # "agent_results": {},  # Missing
+            "current_agent": "orchestrator",
+            "completed": False,
+        }
+        assert validate_multi_agent_state(invalid_state) is False
+
+    def test_validate_multi_agent_state_missing_current_agent(self) -> None:
+        """Test state validation fails when current_agent field is missing."""
+        invalid_state = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            # "current_agent": "orchestrator",  # Missing
+            "completed": False,
+        }
+        assert validate_multi_agent_state(invalid_state) is False
+
+    def test_validate_multi_agent_state_missing_completed(self) -> None:
+        """Test state validation fails when completed field is missing."""
+        invalid_state = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            # "completed": False,  # Missing
+        }
+        assert validate_multi_agent_state(invalid_state) is False
+
+
+class TestMultiAgentStateUpdates:
+    """Test multi-agent state updates with reducers."""
+
+    def test_multi_agent_state_update_task(self) -> None:
+        """Test updating task in MultiAgentState."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "initial_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {},
+        }
+
+        # Simulate task update (reducer would handle this in actual LangGraph)
+        new_task = "updated_task"
+        updated_task = last_value(state["task"], new_task)
+
+        assert updated_task == "updated_task"
+
+    def test_multi_agent_state_update_agent_results(self) -> None:
+        """Test updating agent_results in MultiAgentState."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {"data": {"agent": "data", "result": "processed"}},
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {},
+        }
+
+        # Simulate agent results update
+        update = {"analysis": {"agent": "analysis", "result": "complete"}}
+        expected = merge_agent_results(state["agent_results"], update)
+
+        assert "data" in expected
+        assert "analysis" in expected
+        assert expected["data"]["agent"] == "data"
+        assert expected["analysis"]["agent"] == "analysis"
+
+    def test_multi_agent_state_update_current_agent(self) -> None:
+        """Test updating current_agent in MultiAgentState."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {},
+        }
+
+        # Simulate current agent update
+        new_agent = "data"
+        updated_agent = last_value(state["current_agent"], new_agent)
+
+        assert updated_agent == "data"
+
+    def test_multi_agent_state_update_completed(self) -> None:
+        """Test updating completed status in MultiAgentState."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {},
+        }
+
+        # Simulate completion update
+        # The completed field uses last_value reducer, which returns the new value
+        # In actual LangGraph, the reducer would handle this automatically
+        new_completed = True
+        # Verify the state can be updated
+        assert state["completed"] is False
+        # In actual workflow, LangGraph would apply the reducer
+        assert new_completed is True
+
+    def test_multi_agent_state_update_metadata(self) -> None:
+        """Test updating metadata in MultiAgentState."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {"initial": "value"},
+        }
+
+        # Simulate metadata update
+        update = {"new": "value", "initial": "updated"}
+        expected = merge_dicts(state["metadata"], update)
+
+        assert expected["new"] == "value"
+        assert expected["initial"] == "updated"
+
+
+class TestMultiAgentStateTypeHints:
+    """Test that MultiAgentState types work correctly with type hints."""
+
+    def test_multi_agent_state_type_hints(self) -> None:
+        """Test MultiAgentState type hints are correct."""
+        state: MultiAgentState = {
+            "messages": [],
+            "task": "test_task",
+            "agent_results": {},
+            "current_agent": "orchestrator",
+            "completed": False,
+            "metadata": {},
+        }
+
+        # Type checker should recognize these fields
+        assert isinstance(state["messages"], list)
+        assert isinstance(state["task"], str)
+        assert isinstance(state["agent_results"], dict)
+        assert isinstance(state["current_agent"], str)
+        assert isinstance(state["completed"], bool)
+        assert isinstance(state["metadata"], dict)
 

@@ -25,10 +25,13 @@ from langgraph_workflows.conditional_workflow import (
     should_continue,
 )
 from langgraph_workflows.state import (
+    MultiAgentState,
     SimpleState,
     WorkflowState,
     last_value,
+    merge_agent_results,
     merge_dicts,
+    validate_multi_agent_state,
     validate_simple_state,
     validate_state,
 )
@@ -39,12 +42,15 @@ __all__ = [
     # State definitions
     "WorkflowState",
     "SimpleState",
+    "MultiAgentState",
     # Reducers
     "merge_dicts",
+    "merge_agent_results",
     "last_value",
     # Validation
     "validate_state",
     "validate_simple_state",
+    "validate_multi_agent_state",
     # Basic workflow
     "node_a",
     "node_b",
