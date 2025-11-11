@@ -35,10 +35,19 @@ Event schema validation and serialization tests.
 pytest project/tests/kafka/test_events.py -v
 ```
 
-### `test_producer.py` (To Be Implemented)
+### `test_producer.py` ✅ Complete
 Kafka producer functionality tests.
 
-**Status**: Planned for TASK-011
+**Status**: ✅ Complete - 17 tests passing (TASK-011)
+
+**Coverage**:
+- Producer initialization and configuration
+- Event serialization
+- Event publishing (success and error cases)
+- Connection management (flush, close)
+- Context manager support
+- Error handling (timeouts, Kafka errors)
+- Integration test placeholder (requires running Kafka)
 
 ### `test_consumer.py` (To Be Implemented)
 Kafka consumer functionality tests.
@@ -48,7 +57,7 @@ Kafka consumer functionality tests.
 ## Status
 
 - ✅ **Event Schema Tests** (TASK-010): Complete - 26 tests passing
-- ⏳ **Producer Tests** (TASK-011): Planned
+- ✅ **Producer Tests** (TASK-011): Complete - 17 tests passing
 - ⏳ **Consumer Tests** (TASK-012): Planned
 
 ## Running Tests
@@ -60,8 +69,12 @@ pytest project/tests/kafka/ -v
 # Run only event schema tests
 pytest project/tests/kafka/test_events.py -v
 
+# Run only producer tests
+pytest project/tests/kafka/test_producer.py -v
+
 # Run with coverage
 pytest project/tests/kafka/test_events.py --cov=workflow_events --cov-report=term-missing
+pytest project/tests/kafka/test_producer.py --cov=workflow_events.producer --cov-report=term-missing
 ```
 
 ## Event Schema Module

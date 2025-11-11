@@ -18,6 +18,7 @@ from .schema_utils import (
     get_validation_schema,
     get_serialization_schema,
 )
+from .producer import WorkflowEventProducer
 
 __all__ = [
     "EventType",
@@ -25,6 +26,7 @@ __all__ = [
     "WorkflowEventPayload",
     "WorkflowEventMetadata",
     "WorkflowEvent",
+    "WorkflowEventProducer",
     "generate_json_schema",
     "save_json_schema",
     "get_validation_schema",
