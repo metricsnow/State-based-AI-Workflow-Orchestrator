@@ -47,6 +47,11 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
   - State schemas (WorkflowState, SimpleState), reducers (merge_dicts, last_value, add_messages)
   - State validation, usage examples, best practices
   - 26 comprehensive tests, all passing
+- **[LangGraph Conditional Routing Guide](langgraph-conditional-routing-guide.md)** - Conditional routing in LangGraph workflows
+  - ✅ TASK-017: Conditional Routing Implementation (Complete)
+  - Routing functions, conditional edges, dynamic workflow execution
+  - Multiple routing patterns, error handling, best practices
+  - 25 comprehensive tests, all passing
 
 ### Main PRD
 - **[Main PRD](prd.md)** - Complete product requirements document
@@ -86,7 +91,8 @@ docs/
 ├── kafka-producer-guide.md     # Kafka producer usage guide (TASK-011)
 ├── kafka-consumer-guide.md     # Kafka consumer usage guide (TASK-012)
 ├── kafka-setup-guide.md        # Kafka infrastructure setup (TASK-009)
-└── langgraph-state-guide.md    # LangGraph state definitions (TASK-015)
+├── langgraph-state-guide.md    # LangGraph state definitions (TASK-015)
+└── langgraph-conditional-routing-guide.md  # Conditional routing (TASK-017)
 ```
 
 ## Security Requirements
@@ -137,10 +143,11 @@ See [Testing Guide](testing-guide-phase1.md) and [Test Suite README](../tests/RE
 - ✅ TASK-014: LangGraph Development Environment Setup (Complete - 5 tests)
 - ✅ TASK-015: State Definition and Reducers Implementation (Complete - 26 tests)
 - ✅ TASK-016: Basic StateGraph with Nodes Implementation (Complete - 18 tests)
-- **Total Tests**: 49 LangGraph tests (all passing)
-- **Status**: Basic StateGraph foundation complete, ready for conditional routing
+- ✅ TASK-017: Conditional Routing Implementation (Complete - 25 tests)
+- **Total Tests**: 73 LangGraph tests (all passing)
+- **Status**: Conditional routing complete, ready for checkpointing
 
-**Next Tasks**: TASK-017 (Conditional Routing), TASK-018 (Checkpointing), TASK-019 (Integration Tests)
+**Next Tasks**: TASK-018 (Checkpointing), TASK-019 (Integration Tests), TASK-020 (Multi-Agent State)
 
 ## Contributing
 

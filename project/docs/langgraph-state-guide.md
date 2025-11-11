@@ -265,7 +265,11 @@ project/langgraph_workflows/
 
 ## Next Steps
 
-- TASK-016: Basic StateGraph with Nodes Implementation
-- TASK-017: Conditional Routing Implementation
+- ✅ TASK-016: Basic StateGraph with Nodes Implementation (Complete)
+- ✅ TASK-017: Conditional Routing Implementation (Complete)
 - TASK-018: Checkpointing Configuration and Testing
+
+## Related Guides
+
+- [LangGraph Conditional Routing Guide](langgraph-conditional-routing-guide.md) - Conditional routing patterns and implementation
 
