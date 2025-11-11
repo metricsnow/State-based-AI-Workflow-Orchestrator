@@ -66,7 +66,15 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
     - Complete workflow execution integration
     - Result publishing integration
     - Checkpointing preserved (uses event_id as thread_id)
-  - 29+ comprehensive production tests, all passing
+  - ✅ TASK-030: Airflow Task for Triggering LangGraph Workflows (Complete)
+    - Reusable `@task` decorated function for triggering workflows
+    - Publishes workflow trigger events to Kafka
+    - Polls for workflow results with timeout
+    - Automatic DAG context extraction
+    - Error handling for timeouts and failures
+    - Returns workflow result data to downstream tasks
+    - Example DAG demonstrating complete integration pattern
+  - 40+ comprehensive production tests, all passing
   - **CRITICAL**: All tests use production conditions - no mocks, no placeholders
 
 ## Phase 2 Documentation

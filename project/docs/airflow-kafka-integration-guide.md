@@ -305,6 +305,120 @@ If Kafka connection fails:
 - Check network connectivity from Airflow containers
 - Verify `KAFKA_BOOTSTRAP_SERVERS` is accessible from Airflow
 
+## LangGraph Workflow Integration
+
+### Triggering LangGraph Workflows from Airflow
+
+The `trigger_langgraph_workflow` function provides a complete integration pattern for triggering LangGraph workflows from Airflow tasks. This function:
+
+1. Publishes a `WORKFLOW_TRIGGERED` event to Kafka
+2. Waits for the LangGraph workflow to process the event
+3. Polls for the workflow result
+4. Returns the result to the Airflow task
+
+**Status**: ✅ TASK-030 Complete
+
+### Usage
+
+```python
+from airflow.decorators import dag, task
+from airflow_integration.langgraph_trigger import trigger_langgraph_workflow
+
+@dag(
+    dag_id="langgraph_workflow_example",
+    start_date=datetime(2025, 1, 1),
+    schedule="@daily",
+)
+def langgraph_workflow_dag():
+    @task
+    def prepare_data():
+        """Prepare data for LangGraph workflow."""
+        return {
+            "task": "analyze_trading_data",
+            "data": {
+                "symbol": "AAPL",
+                "date_range": "2025-01-01:2025-01-31",
+            }
+        }
+    
+    @task
+    def trigger_workflow(task_data, **context):
+        """Trigger LangGraph workflow and wait for result."""
+        return trigger_langgraph_workflow(
+            task_data=task_data,
+            timeout=300,  # 5 minutes timeout
+            **context
+        )
+    
+    @task
+    def process_result(workflow_result):
+        """Process the workflow result."""
+        print(f"Workflow completed: {workflow_result}")
+        return workflow_result
+    
+    # Task dependencies
+    data = prepare_data()
+    result = trigger_workflow(data)
+    process_result(result)
+
+langgraph_workflow_dag()
+```
+
+### Function Parameters
+
+- **`task_data`** (Dict[str, Any]): Data to pass to the LangGraph workflow. Should contain:
+  - `task`: Task description/type
+  - `data`: Workflow-specific data
+- **`workflow_id`** (Optional[str]): Override workflow ID. Defaults to DAG ID from context.
+- **`timeout`** (int): Timeout in seconds for result polling. Default: 300 seconds (5 minutes).
+- **`**context`**: Airflow context (automatically provided by TaskFlow API).
+
+### Return Value
+
+Returns a dictionary containing the workflow result:
+```python
+{
+    "completed": True,
+    "agent_results": {...},
+    "task": "...",
+    "metadata": {...}
+}
+```
+
+### Error Handling
+
+The function handles various error scenarios:
+
+- **Timeout**: Raises `TimeoutError` if result not received within timeout
+- **Workflow Failure**: Raises `RuntimeError` if workflow execution failed
+- **Event Publishing Failure**: Raises `RuntimeError` if event cannot be published
+- **Missing Context**: Raises `ValueError` if Airflow context is not available
+
+### Configuration
+
+The function uses the same environment variables as other Kafka integration functions:
+
+```bash
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+KAFKA_WORKFLOW_EVENTS_TOPIC=workflow-events
+KAFKA_WORKFLOW_RESULTS_TOPIC=workflow-results
+```
+
+### Example DAG
+
+See `project/dags/langgraph_integration_dag.py` for a complete example demonstrating:
+- Data preparation
+- Workflow triggering
+- Result processing
+- Error handling
+
+### Test Coverage
+
+- ✅ 11 comprehensive tests (9 unit + 2 integration)
+- ✅ All tests use production conditions (real Kafka, no mocks)
+- ✅ Detailed status output for debugging
+- ✅ All tests passing
+
 ## API Reference
 
 ### Functions
@@ -329,10 +443,28 @@ Publish a DAG completion event. Automatically determines event type based on DAG
 
 Publish an event from TaskFlow task context. Automatically extracts DAG and run information.
 
+#### `trigger_langgraph_workflow(task_data, workflow_id=None, timeout=300, **context) -> Dict[str, Any]`
+
+Trigger a LangGraph workflow from an Airflow task. Publishes a workflow trigger event to Kafka and polls for the result.
+
+**Parameters**:
+- `task_data` (Dict[str, Any]): Data to pass to LangGraph workflow
+- `workflow_id` (Optional[str]): Override workflow ID (defaults to DAG ID)
+- `timeout` (int): Timeout in seconds for result polling (default: 300)
+- `**context`: Airflow context (automatically provided)
+
+**Returns**: Dictionary containing workflow result data
+
+**Raises**:
+- `ValueError`: If Airflow context is not available
+- `RuntimeError`: If event publishing or workflow execution fails
+- `TimeoutError`: If result not received within timeout period
+
 ## Related Documentation
 
 - [Kafka Producer Guide](kafka-producer-guide.md)
 - [Kafka Consumer Guide](kafka-consumer-guide.md)
 - [Event Schema Guide](event-schema-guide.md)
 - [TaskFlow API Guide](taskflow-api-guide.md)
+- [LangGraph Kafka Integration Guide](langgraph-kafka-integration-guide.md) - Complete LangGraph-Kafka integration documentation
 

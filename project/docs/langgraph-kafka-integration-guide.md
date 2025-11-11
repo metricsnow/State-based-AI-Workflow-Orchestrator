@@ -808,9 +808,60 @@ await result_producer.publish_result(
   - Consumer integration tests
   - Result return integration tests
 
-## Next Steps
+## Airflow Integration
 
-- **TASK-030**: Create Airflow Task for Triggering LangGraph Workflows - Airflow integration
+### TASK-030: Airflow Task for Triggering LangGraph Workflows ✅
+
+**Status**: Complete
+
+The `trigger_langgraph_workflow` function provides a reusable Airflow task decorator that triggers LangGraph workflows via Kafka and polls for results. This completes the integration between Airflow and LangGraph workflows.
+
+**Key Features**:
+- `@task` decorated function for seamless Airflow integration
+- Publishes `WORKFLOW_TRIGGERED` events to Kafka
+- Polls for workflow results with configurable timeout
+- Automatic DAG context extraction
+- Error handling for timeouts and failures
+- Returns workflow result data to downstream tasks
+
+**Usage Example**:
+```python
+from airflow.decorators import dag, task
+from airflow_integration.langgraph_trigger import trigger_langgraph_workflow
+
+@dag(dag_id="my_workflow", ...)
+def my_dag():
+    @task
+    def prepare_data():
+        return {"task": "analyze_data", "data": {...}}
+    
+    @task
+    def trigger_workflow(task_data, **context):
+        return trigger_langgraph_workflow(
+            task_data=task_data,
+            timeout=300,  # 5 minutes
+            **context
+        )
+    
+    @task
+    def process_result(workflow_result):
+        # Process the workflow result
+        return workflow_result
+    
+    data = prepare_data()
+    result = trigger_workflow(data)
+    process_result(result)
+
+my_dag()
+```
+
+**Test Coverage**:
+- ✅ 11 comprehensive tests (9 unit + 2 integration)
+- ✅ All tests use production conditions (real Kafka, no mocks)
+- ✅ Detailed status output for debugging
+- ✅ All tests passing
+
+**Documentation**: See `project/dags/langgraph_integration_dag.py` for complete example.
 
 ## Related Documentation
 
@@ -827,13 +878,14 @@ The LangGraph Kafka integration provides:
 - ✅ Event-to-state conversion for LangGraph workflows
 - ✅ Complete workflow execution integration (TASK-029)
 - ✅ Result publishing to workflow-results topic (TASK-028)
+- ✅ Airflow task function for triggering workflows (TASK-030)
 - ✅ Concurrent workflow execution
 - ✅ Error handling that doesn't stop consumer
 - ✅ Checkpointing preserved (uses event_id as thread_id)
 - ✅ Graceful shutdown support
 - ✅ Configuration via environment variables
 - ✅ Production-ready service lifecycle
-- ✅ Comprehensive test coverage (29+ tests, all passing)
+- ✅ Comprehensive test coverage (40+ tests, all passing)
 
-**Status**: Production-ready for event-driven LangGraph workflow execution with complete integration.
+**Status**: Production-ready for event-driven LangGraph workflow execution with complete Airflow integration.
 

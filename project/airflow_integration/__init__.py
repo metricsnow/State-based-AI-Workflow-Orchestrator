@@ -13,6 +13,7 @@ from .kafka_utils import (
 )
 from .task_helpers import publish_event_from_taskflow_context
 from .result_poller import WorkflowResultPoller
+from .langgraph_trigger import trigger_langgraph_workflow
 
 __all__ = [
     "get_kafka_producer",
@@ -21,5 +22,6 @@ __all__ = [
     "publish_dag_completion_event",
     "publish_event_from_taskflow_context",
     "WorkflowResultPoller",
+    "trigger_langgraph_workflow",
 ]
 
