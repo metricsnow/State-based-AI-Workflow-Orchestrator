@@ -38,7 +38,7 @@ pytest project/tests/kafka/test_events.py -v
 ### `test_producer.py` ✅ Complete
 Kafka producer functionality tests.
 
-**Status**: ✅ Complete - 17 tests passing (TASK-011)
+**Status**: ✅ Complete - 12 integration tests passing (TASK-011)
 
 **Coverage**:
 - Producer initialization and configuration
@@ -47,12 +47,12 @@ Kafka producer functionality tests.
 - Connection management (flush, close)
 - Context manager support
 - Error handling (timeouts, Kafka errors)
-- Integration test placeholder (requires running Kafka)
+- Real integration tests using production Kafka
 
 ### `test_consumer.py` ✅ Complete
 Kafka consumer functionality tests.
 
-**Status**: ✅ Complete - 25 tests passing (TASK-012)
+**Status**: ✅ Complete - 15 integration tests passing (TASK-012)
 
 **Coverage**:
 - Consumer initialization and configuration
@@ -63,13 +63,16 @@ Kafka consumer functionality tests.
 - Offset management (commit, seek, position)
 - Connection management (close, context manager)
 - Error handling (deserialization errors, callback errors)
-- Integration test placeholder (requires running Kafka)
+- Real integration tests using production Kafka
 
 ## Status
 
 - ✅ **Event Schema Tests** (TASK-010): Complete - 26 tests passing
-- ✅ **Producer Tests** (TASK-011): Complete - 17 tests passing
-- ✅ **Consumer Tests** (TASK-012): Complete - 25 tests passing
+- ✅ **Producer Tests** (TASK-011): Complete - 12 integration tests passing (all use real Kafka)
+- ✅ **Consumer Tests** (TASK-012): Complete - 15 integration tests passing (all use real Kafka)
+- ✅ **Total**: 53 tests passing - All tests use production Kafka environment
+
+**CRITICAL**: All tests have been migrated from mocked tests to real integration tests. No mocks or placeholders are used.
 
 ## Running Tests
 

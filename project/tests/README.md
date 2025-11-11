@@ -80,10 +80,15 @@ Tests for Airflow DAGs, TaskFlow API, and workflow execution.
 ### Kafka Module (`kafka/`)
 Tests for Kafka producers, consumers, and event streaming.
 
-**Test Files** (to be implemented):
-- `test_producer.py`: Kafka producer functionality
-- `test_consumer.py`: Kafka consumer functionality
-- `test_events.py`: Event schema validation
+**Test Files** (✅ Implemented):
+- `test_producer.py`: Kafka producer functionality - 12 integration tests using real Kafka
+- `test_consumer.py`: Kafka consumer functionality - 15 integration tests using real Kafka
+- `test_events.py`: Event schema validation - 26 tests
+
+**Status**: ✅ 53 tests passing (all using production Kafka environment)
+- **CRITICAL**: All tests use real Kafka brokers - NO MOCKS, NO PLACEHOLDERS
+- Tests connect to real Kafka at `localhost:9092`
+- Tests verify end-to-end publish → consume flow with real Kafka
 
 **Markers**: `@pytest.mark.kafka`, `@pytest.mark.events`
 
@@ -114,9 +119,16 @@ pytest project/tests/airflow/ -v
 pytest project/tests/airflow/ --cov=project/dags --cov-report=term-missing
 ```
 
-**Kafka tests** (when implemented):
+**Kafka tests** (✅ Implemented):
 ```bash
-pytest project/tests/kafka/
+# Ensure Kafka is running
+docker-compose ps kafka
+
+# Run all Kafka tests
+pytest project/tests/kafka/ -v
+
+# Run with coverage
+pytest project/tests/kafka/ --cov=workflow_events --cov-report=term-missing
 ```
 
 ### Run by Marker
@@ -153,7 +165,8 @@ pip install -r project/tests/infrastructure/requirements-test.txt
 
 - [Infrastructure Tests](infrastructure/README.md) - Docker Compose and service tests
 - [Airflow Tests](airflow/README.md) - Airflow DAG and workflow tests (✅ 108 tests, 97% coverage)
-- [Kafka Tests](kafka/README.md) - Kafka producer/consumer tests (coming soon)
+- [Kafka Tests](kafka/README.md) - Kafka producer/consumer tests (✅ 53 tests, all using real Kafka)
+- [LangGraph Tests](langgraph/) - LangGraph development environment tests (✅ 5 tests)
 
 ## Adding New Tests
 
@@ -169,10 +182,20 @@ When adding tests for a new module:
 
 - **Infrastructure**: >90% coverage
 - **Airflow**: ✅ 100% coverage (exceeds 80% target)
-- **Kafka**: >80% coverage (target)
+- **Kafka**: ✅ >80% coverage (53 tests, all integration tests)
 - **Overall**: >80% coverage
 
 ## Current Test Status
+
+### Kafka Tests (✅ Complete - TASK-010, TASK-011, TASK-012)
+- **Total Tests**: 53 tests
+- **Status**: All passing (53/53)
+- **Coverage**: >80% for workflow_events module
+- **Test Files**: 3 test files implemented
+  - `test_events.py`: 26 tests (TASK-010)
+  - `test_producer.py`: 12 integration tests (TASK-011) - All use real Kafka
+  - `test_consumer.py`: 15 integration tests (TASK-012) - All use real Kafka
+- **CRITICAL**: All tests migrated from mocked tests to real integration tests. No mocks or placeholders.
 
 ### Airflow Tests (✅ Complete - TASK-008)
 - **Total Tests**: 108 tests
@@ -186,4 +209,9 @@ When adding tests for a new module:
   - `test_taskflow_dag_structure.py`: 10 tests (TASK-007)
   - `test_dag_execution.py`: 13 tests (TASK-008)
   - `test_airflow_init.py`: 13 tests (existing)
+
+### LangGraph Tests (✅ Complete - TASK-014)
+- **Total Tests**: 5 tests
+- **Status**: All passing (5/5)
+- **Test File**: `test_installation.py` - LangGraph development environment verification
 

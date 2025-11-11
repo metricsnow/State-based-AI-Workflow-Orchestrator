@@ -44,8 +44,10 @@ project/tests/
 │   ├── test_task_functions.py      # Task function unit tests (16 tests)
 │   ├── test_xcom_data_passing.py   # XCom data passing (36 tests) ✅ TASK-006
 │   └── test_airflow_init.py        # Airflow initialization (13 tests)
-└── kafka/                  # Kafka tests (Phase 1.3+) ✅ 26 tests
-    └── test_events.py              # Event schema validation (26 tests) ✅ TASK-010
+└── kafka/                  # Kafka tests (Phase 1.3+) ✅ 53 tests
+    ├── test_events.py              # Event schema validation (26 tests) ✅ TASK-010
+    ├── test_producer.py            # Producer integration tests (12 tests) ✅ TASK-011
+    └── test_consumer.py            # Consumer integration tests (15 tests) ✅ TASK-012
 ```
 
 See `project/tests/README.md` for detailed test suite documentation.
@@ -248,6 +250,35 @@ docker-compose ps
 ```
 
 ## Integration Testing
+
+### Kafka Integration Tests
+
+**CRITICAL**: All Kafka tests use real Kafka brokers - NO MOCKS, NO PLACEHOLDERS.
+
+```bash
+# Ensure Kafka is running
+docker-compose ps kafka
+
+# Run all Kafka integration tests (53 tests)
+pytest project/tests/kafka/ -v
+
+# Run producer tests (12 tests - all use real Kafka)
+pytest project/tests/kafka/test_producer.py -v
+
+# Run consumer tests (15 tests - all use real Kafka)
+pytest project/tests/kafka/test_consumer.py -v
+```
+
+**Test Coverage**:
+- Producer initialization and connection to real Kafka
+- Event publishing to real Kafka topics
+- Consumer initialization and connection to real Kafka
+- Event consumption from real Kafka topics
+- End-to-end publish → consume flow verification
+- Offset management with real Kafka
+- Connection management (flush, close, context managers)
+
+All tests connect to Kafka at `localhost:9092` and use actual Docker containers.
 
 ### Test Airflow Database Connection
 
@@ -569,8 +600,11 @@ pip install pydantic pytest
 # Run all event schema tests
 pytest project/tests/kafka/test_events.py -v
 
-# Run with verbose output
+# Run with verbose output and print statements
 pytest project/tests/kafka/test_events.py -v -s
+
+# Run Kafka integration tests with coverage
+pytest project/tests/kafka/ --cov=workflow_events --cov-report=term-missing
 ```
 
 **Test Results**:

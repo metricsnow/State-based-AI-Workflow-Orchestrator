@@ -1,0 +1,12 @@
+# Core dependencies for LangGraph development environment
+# TASK-014: LangGraph Development Environment Setup
+
+# LangGraph and LangChain
+langgraph>=0.6.0
+langchain>=0.2.0
+langchain-core>=0.2.0
+
+# Core dependencies
+pydantic>=2.0.0
+typing-extensions>=4.8.0
+
