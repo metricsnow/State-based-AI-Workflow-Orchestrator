@@ -148,6 +148,28 @@ Integration tests for TaskFlow DAG execution.
 - Validates task dependencies and execution order
 - Tests error handling patterns
 
+### `test_kafka_integration.py` ✅ Implemented (TASK-013)
+Airflow-Kafka integration tests with real Kafka instances.
+
+**Test Coverage** (15 tests):
+- Producer creation and connection (3 tests)
+- Event publishing to real Kafka (4 tests)
+- Event consumption verification (1 test - publish → consume)
+- Task completion events (2 tests)
+- DAG completion events (2 tests)
+- TaskFlow context integration (3 tests)
+
+**Status**: ✅ Complete - All 15 tests passing
+
+**Implementation Details**:
+- **CRITICAL**: All tests use **real Kafka instances** - NO MOCKS, NO PLACEHOLDERS
+- Tests connect to real Kafka broker at `localhost:9092` (Docker container)
+- Tests publish events to actual Kafka topics
+- Tests verify end-to-end publish → consume flow
+- Tests use production Kafka environment from `docker-compose.yml`
+- All producer/consumer connections are real
+- Follows project's production-only testing philosophy
+
 ## Running Tests
 
 ### Prerequisites
@@ -205,6 +227,9 @@ pytest project/tests/airflow/test_dag_execution.py -v
 
 # Airflow initialization tests
 pytest project/tests/airflow/test_airflow_init.py -v
+
+# Kafka integration tests (requires running Kafka)
+pytest project/tests/airflow/test_kafka_integration.py -v
 ```
 
 ### Running Specific Test Classes
@@ -241,12 +266,13 @@ print('✅ DAG validation passed!')
 ## Test Results
 
 **Last Run**: 2025-01-27
-- ✅ **Total Tests**: 108 tests (all Airflow tests)
+- ✅ **Total Tests**: 123 tests (all Airflow tests)
 - ✅ **TaskFlow Unit Tests**: 62 tests (TASK-007)
 - ✅ **Integration Tests**: 13 tests (TASK-008)
-- ✅ **Test Status**: All passing (108/108)
+- ✅ **Kafka Integration Tests**: 15 tests (TASK-013) - Real Kafka, no mocks
+- ✅ **Test Status**: All passing (123/123)
 - ✅ **Coverage**: 97% for TaskFlow DAG code (exceeds 80% requirement)
-- ✅ **Execution Time**: ~1 second for unit tests, ~3-4 seconds for integration tests
+- ✅ **Execution Time**: ~1 second for unit tests, ~3-4 seconds for integration tests, ~5 seconds for Kafka tests
 
 ### Test Breakdown
 
@@ -257,6 +283,7 @@ print('✅ DAG validation passed!')
 - **TaskFlow DAG Structure Tests**: 10/10 passing (TASK-007)
 - **DAG Execution Integration Tests**: 13/13 passing (TASK-008)
 - **Airflow Init Tests**: 13/13 passing (existing)
+- **Kafka Integration Tests**: 15/15 passing (TASK-013) - Real Kafka, production environment
 
 ### Coverage Report (TASK-007)
 

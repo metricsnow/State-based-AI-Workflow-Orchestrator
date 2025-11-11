@@ -9,11 +9,15 @@ This directory contains the main project implementation for Phase 1.
 - `plugins/` - Airflow custom plugins
 - `workflow_events/` - Workflow event schema module (TASK-010) ✅
   - Pydantic models for event validation and serialization
+- `airflow_integration/` - Airflow-Kafka integration module (TASK-013) ✅
+  - Reusable utilities for publishing workflow events from Airflow tasks
+  - TaskFlow API integration helpers
 - `dev/` - Development artifacts (tasks, bugs)
 - `docs/` - Project documentation (PRDs)
 - `tests/` - Test suite organized by module
   - `infrastructure/` - Docker Compose and infrastructure tests
   - `airflow/` - Airflow DAG and workflow tests (Phase 1.2+)
+    - Includes Kafka integration tests (15 tests) - Real Kafka, no mocks ✅
   - `kafka/` - Kafka producer/consumer tests (Phase 1.3+) ✅ Event schema tests (26 tests)
 
 ## Quick Start
@@ -37,12 +41,13 @@ This directory contains the main project implementation for Phase 1.
 ## DAGs
 
 - **example_etl_dag**: Example ETL DAG using TaskFlow API (`@dag` and `@task` decorators)
-  - Tasks: extract, transform, validate, load
+  - Tasks: extract, transform, validate, load, publish_completion
   - Uses TaskFlow API for automatic XCom management
   - Type hints for better IDE support
   - Automatic dependency management via function calls
+  - Kafka integration: Publishes workflow completion events to Kafka
   - Located in: `project/dags/example_etl_dag.py`
-  - **Status**: ✅ Migrated to TaskFlow API (TASK-005 complete)
+  - **Status**: ✅ Migrated to TaskFlow API (TASK-005 complete), ✅ Kafka integration (TASK-013 complete)
 
 ## Testing
 

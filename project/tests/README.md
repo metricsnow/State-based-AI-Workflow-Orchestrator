@@ -33,6 +33,7 @@ project/tests/
 │   ├── conftest.py          # Airflow-specific fixtures
 │   ├── test_dag_structure.py    # DAG structure validation
 │   ├── test_taskflow.py         # TaskFlow API tests
+│   ├── test_kafka_integration.py  # Airflow-Kafka integration tests (TASK-013)
 │   └── README.md
 └── kafka/                   # Kafka-specific tests (Phase 1.3+)
     ├── __init__.py
@@ -67,8 +68,12 @@ Tests for Airflow DAGs, TaskFlow API, and workflow execution.
 - `test_taskflow_dag_structure.py`: TaskFlow DAG structure validation (10 tests) - TASK-007
 - `test_dag_execution.py`: DAG execution integration tests (13 tests) - TASK-008
 - `test_airflow_init.py`: Airflow initialization tests (13 tests)
+- `test_kafka_integration.py`: Airflow-Kafka integration tests (15 tests) - TASK-013
+  - **CRITICAL**: All tests use real Kafka instances - NO MOCKS, NO PLACEHOLDERS
+  - Tests connect to real Kafka broker at `localhost:9092`
+  - Tests verify end-to-end publish → consume flow
 
-**Status**: ✅ 108 tests passing, 97% coverage for TaskFlow DAG code (TASK-007, TASK-008)
+**Status**: ✅ 123 tests passing (108 Airflow + 15 Kafka integration), 97% coverage for TaskFlow DAG code (TASK-007, TASK-008, TASK-013)
 
 **Markers**: `@pytest.mark.airflow`, `@pytest.mark.dag`
 
