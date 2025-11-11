@@ -52,7 +52,22 @@ venv\Scripts\activate     # On Windows
 which python  # Should show venv path
 ```
 
-### Step 3: Generate FERNET_KEY
+### Step 3: Install Python Dependencies
+
+```bash
+# Ensure venv is activated
+source venv/bin/activate
+
+# Install core dependencies from requirements.txt
+pip install -r requirements.txt
+```
+
+**Important**: This installs all required packages including:
+- LangGraph and LangChain core packages
+- **langchain-ollama** (TASK-026) - For Ollama LLM integration
+- All other project dependencies
+
+### Step 4: Generate FERNET_KEY
 
 ```bash
 # Ensure venv is activated
@@ -67,7 +82,7 @@ pip install cryptography
 
 Copy the generated FERNET_KEY.
 
-### Step 4: Create .env File
+### Step 5: Create .env File
 
 ```bash
 # Create .env file from example
@@ -79,7 +94,7 @@ cp .env.example .env
 
 **Important**: The `.env` file is in `.gitignore` and will not be committed to version control.
 
-### Step 5: Verify Configuration
+### Step 6: Verify Configuration
 
 Run pre-flight tests:
 
@@ -95,7 +110,7 @@ pytest project/tests/infrastructure/test_docker_compose.py -v
 
 **Expected**: All 11 configuration tests should pass.
 
-### Step 6: Start Docker Compose Services
+### Step 7: Start Docker Compose Services
 
 ```bash
 # Start all services
@@ -116,7 +131,7 @@ docker-compose logs -f
 - Airflow Scheduler: `running`
 - Ollama: `healthy` (after 40s start_period)
 
-### Step 7: Initialize Airflow
+### Step 8: Initialize Airflow
 
 **IMPORTANT**: Airflow database must be initialized before accessing the UI.
 
@@ -150,7 +165,7 @@ Initialization done
 - The script uses `docker-compose run --rm` which creates one-off containers for initialization
 - This allows initialization even if the webserver service isn't running yet
 
-### Step 8: Verify Services
+### Step 9: Verify Services
 
 ```bash
 # Check Airflow UI health
@@ -167,7 +182,7 @@ docker-compose exec postgres pg_isready -U airflow
 docker-compose exec airflow-webserver airflow users list
 ```
 
-### Step 9: Access Airflow UI
+### Step 10: Access Airflow UI
 
 1. **Open browser**: http://localhost:8080
 2. **Login with**:
@@ -181,7 +196,7 @@ docker-compose exec airflow-webserver airflow users list
 
 ⚠️ **Security**: Change the admin password in production!
 
-### Step 10: Run Integration Tests (Optional)
+### Step 11: Run Integration Tests (Optional)
 
 ```bash
 # Ensure services are running
@@ -356,8 +371,14 @@ After successful setup:
    - Accessible from Airflow and other containers via `airflow-network`
    - Volume persistence configured for model storage
    - Health checks configured and monitoring
-5. **TASK-004**: DAG Validation and Testing (Next)
-6. **TASK-005**: Migrate DAGs to TaskFlow API
+5. ✅ **TASK-026 Complete**: LangChain-Ollama Package Integration
+   - `langchain-ollama>=0.1.0` added to requirements.txt
+   - Package installed and verified (version 1.0.0)
+   - Correct import pattern: `from langchain_ollama import OllamaLLM`
+   - Comprehensive tests: 13 production tests passing
+   - Ready for TASK-033 (Ollama LangChain integration implementation)
+6. **TASK-004**: DAG Validation and Testing (Next)
+7. **TASK-005**: Migrate DAGs to TaskFlow API
 
 See `project/dev/tasks/` for task details.
 

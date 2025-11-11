@@ -311,14 +311,15 @@ ollama pull llama2
 ollama list
 ```
 
-**LangChain Integration**:
+**LangChain Integration** (CORRECTED - TASK-026):
 ```python
-from langchain_community.llms import Ollama
+# CORRECT import (use this):
+from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
 # Initialize Ollama LLM
-llm = Ollama(
+llm = OllamaLLM(
     model="llama2",
     base_url="http://localhost:11434",
     temperature=0.7
@@ -338,10 +339,11 @@ result = chain.run("Analyze this data: [1, 2, 3, 4, 5]")
 print(result)
 ```
 
-**LangGraph Integration**:
+**LangGraph Integration** (CORRECTED - TASK-026):
 ```python
 from langgraph.graph import StateGraph, START, END
-from langchain_community.llms import Ollama
+# CORRECT import (use this):
+from langchain_ollama import OllamaLLM
 from typing import TypedDict
 
 class LLMState(TypedDict):

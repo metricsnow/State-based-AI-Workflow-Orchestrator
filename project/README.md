@@ -38,6 +38,30 @@ This directory contains the main project implementation for Phase 1.
 
 **Status**: All infrastructure services operational. Airflow initialized with example DAG (`example_etl_dag`) using TaskFlow API.
 
+## Dependencies
+
+### Core Packages
+- **LangGraph**: >=0.6.0 (StateGraph workflows)
+- **LangChain**: >=0.2.0 (LLM integration)
+- **langchain-ollama**: >=0.1.0 (Ollama LLM integration) ✅ TASK-026
+- **pydantic**: >=2.0.0 (Data validation)
+- **typing-extensions**: >=4.8.0 (Type hints)
+
+**Installation**:
+```bash
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Important**: Use correct import pattern for Ollama:
+```python
+# CORRECT (TASK-026):
+from langchain_ollama import OllamaLLM
+
+# INCORRECT (deprecated):
+# from langchain_community.llms import Ollama
+```
+
 ## DAGs
 
 - **example_etl_dag**: Example ETL DAG using TaskFlow API (`@dag` and `@task` decorators)
