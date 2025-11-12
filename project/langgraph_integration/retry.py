@@ -78,10 +78,59 @@ def is_transient_error(exception: Exception) -> bool:
         'KafkaTimeoutError',
         'KafkaConnectionError',
         'NetworkError',
+        'BrokerNotAvailableError',
+        'LeaderNotAvailableError',
+        'NotLeaderForPartitionError',
+        'RequestTimedOutError',
+        'CoordinatorNotAvailableError',
+        'CoordinatorLoadInProgressError',
+        'NotCoordinatorError',
+        'GroupCoordinatorNotAvailableError',
+        'NotEnoughReplicasError',
+        'NotEnoughReplicasAfterAppendError',
     )
     
     if any(name in error_name for name in transient_error_names):
         return True
+    
+    # Check for Kafka error module imports
+    try:
+        from aiokafka.errors import (
+            KafkaError,
+            KafkaTimeoutError,
+            KafkaConnectionError,
+            BrokerNotAvailableError,
+            LeaderNotAvailableError,
+            NotLeaderForPartitionError,
+            RequestTimedOutError,
+            CoordinatorNotAvailableError,
+            CoordinatorLoadInProgressError,
+            NotCoordinatorError,
+            GroupCoordinatorNotAvailableError,
+            NotEnoughReplicasError,
+            NotEnoughReplicasAfterAppendError,
+        )
+        
+        kafka_transient_errors = (
+            KafkaTimeoutError,
+            KafkaConnectionError,
+            BrokerNotAvailableError,
+            LeaderNotAvailableError,
+            NotLeaderForPartitionError,
+            RequestTimedOutError,
+            CoordinatorNotAvailableError,
+            CoordinatorLoadInProgressError,
+            NotCoordinatorError,
+            GroupCoordinatorNotAvailableError,
+            NotEnoughReplicasError,
+            NotEnoughReplicasAfterAppendError,
+        )
+        
+        if isinstance(exception, kafka_transient_errors):
+            return True
+    except ImportError:
+        # aiokafka.errors not available, skip Kafka-specific checks
+        pass
     
     return False
 

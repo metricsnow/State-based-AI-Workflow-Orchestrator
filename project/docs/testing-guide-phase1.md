@@ -27,6 +27,29 @@ This guide provides comprehensive testing procedures for the Docker Compose envi
 
 **No placeholders. No mocks. Production environment only.**
 
+### Test Optimization Strategy
+
+While maintaining production conditions, tests are optimized for speed using **faster timeouts and reduced wait times**:
+
+- **Real Services**: All tests use real Kafka, real databases, real Airflow instances
+- **Optimized Timeouts**: Reduced timeouts for faster test execution (e.g., Kafka timeout: 2s instead of 30s)
+- **Faster Polling**: Reduced polling intervals (0.1s instead of 1.0s) for quicker test completion
+- **Configurable**: All optimizations can be overridden via environment variables
+
+**Test Configuration** (see `project/tests/conftest.py`):
+- `TEST_KAFKA_TIMEOUT`: Kafka timeout in seconds (default: 2s, production: 30s)
+- `TEST_WORKFLOW_TIMEOUT`: Workflow execution timeout in seconds (default: 5s, production: 300s)
+- `TEST_POLL_INTERVAL`: Polling interval in seconds (default: 0.1s, production: 1.0s)
+- `TEST_RETRY_DELAY`: Retry delay in seconds (default: 0.05s, production: 1.0s)
+- `TEST_MAX_WAIT_ITERATIONS`: Maximum wait iterations (default: 10, production: 20)
+
+**Available Test Fixtures**:
+- `fast_retry_config`: Optimized retry configuration
+- `fast_consumer_config`: Optimized Kafka consumer configuration
+- `fast_poll_interval`: Fast polling interval
+- `fast_max_wait_iterations`: Reduced wait iterations
+- `fast_wait_loop`: Helper for fast wait loops
+
 ## Test Suite Structure
 
 The test suite is organized by module in `project/tests/`:

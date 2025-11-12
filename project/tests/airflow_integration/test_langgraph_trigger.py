@@ -408,8 +408,9 @@ class TestTriggerFunctionIntegration:
         finally:
             producer_dummy.close()
         
-        # Give Kafka time to create topic
-        await asyncio.sleep(0.5)
+        # Give Kafka time to create topic (fast wait)
+        fast_poll_interval = float(os.getenv("TEST_POLL_INTERVAL", "0.1"))
+        await asyncio.sleep(fast_poll_interval * 2)  # 0.2s instead of 0.5s
         
         # Step 2: Create consumer and wait for partition assignment
         print("\nSTEP 2: Creating Kafka consumer (ready to receive messages)...")
@@ -442,7 +443,8 @@ class TestTriggerFunctionIntegration:
                 next(consumer, None)
             except StopIteration:
                 pass
-            await asyncio.sleep(0.1)
+            fast_poll_interval = float(os.getenv("TEST_POLL_INTERVAL", "0.1"))
+            await asyncio.sleep(fast_poll_interval)  # Use configured fast interval
         
         if not consumer_ready:
             print("  ⚠ Consumer assignment still pending, proceeding anyway")
@@ -494,8 +496,9 @@ class TestTriggerFunctionIntegration:
             print(f"    - Topic partition: 0, offset: 0")
             
             # Give Kafka time to propagate
-            await asyncio.sleep(1)
-            print("  ✓ Waited 1 second for Kafka propagation")
+            fast_poll_interval = float(os.getenv("TEST_POLL_INTERVAL", "0.1"))
+            await asyncio.sleep(fast_poll_interval * 5)  # 0.5s instead of 1s
+            print(f"  ✓ Waited {fast_poll_interval * 5:.1f} seconds for Kafka propagation")
         
         finally:
             await producer.stop()

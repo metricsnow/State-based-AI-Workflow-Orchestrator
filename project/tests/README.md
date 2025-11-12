@@ -14,6 +14,24 @@ Comprehensive pytest-based test suite organized by module for the AI-Powered Wor
 
 **No placeholders. No mocks. Production environment only.**
 
+### Test Optimization Strategy
+
+While maintaining production conditions, tests are optimized for speed using **faster timeouts and reduced wait times**:
+
+- **Real Services**: All tests use real Kafka, real databases, real Airflow instances
+- **Optimized Timeouts**: Reduced timeouts for faster test execution (e.g., Kafka timeout: 2s instead of 30s)
+- **Faster Polling**: Reduced polling intervals (0.1s instead of 1.0s) for quicker test completion
+- **Configurable**: All optimizations can be overridden via environment variables
+
+**Test Configuration**:
+- `TEST_KAFKA_TIMEOUT`: Kafka timeout in seconds (default: 2s, production: 30s)
+- `TEST_WORKFLOW_TIMEOUT`: Workflow execution timeout in seconds (default: 5s, production: 300s)
+- `TEST_POLL_INTERVAL`: Polling interval in seconds (default: 0.1s, production: 1.0s)
+- `TEST_RETRY_DELAY`: Retry delay in seconds (default: 0.05s, production: 1.0s)
+- `TEST_MAX_WAIT_ITERATIONS`: Maximum wait iterations (default: 10, production: 20)
+
+See `project/tests/conftest.py` and `project/tests/utils/test_config.py` for implementation details.
+
 ## Test Structure
 
 ```
@@ -185,6 +203,51 @@ Install test dependencies:
 ```bash
 source venv/bin/activate
 pip install -r project/tests/infrastructure/requirements-test.txt
+```
+
+## Test Configuration
+
+### Test-Optimized Settings
+
+Tests use real services but with optimized timeouts for speed. Configuration is managed via:
+
+- **`project/tests/conftest.py`**: Shared fixtures with test-optimized settings
+- **`project/tests/utils/test_config.py`**: Utility functions for test configuration
+
+### Environment Variables
+
+Customize test behavior via environment variables:
+
+```bash
+# Set custom test timeouts
+export TEST_KAFKA_TIMEOUT=3          # Kafka timeout (seconds)
+export TEST_WORKFLOW_TIMEOUT=10      # Workflow timeout (seconds)
+export TEST_POLL_INTERVAL=0.2        # Polling interval (seconds)
+export TEST_RETRY_DELAY=0.1          # Retry delay (seconds)
+export TEST_MAX_WAIT_ITERATIONS=15   # Max wait iterations
+
+# Run tests with custom settings
+pytest project/tests/langgraph_integration/ -v
+```
+
+### Test Fixtures
+
+Common fixtures available in `conftest.py`:
+
+- `fast_retry_config`: Optimized retry configuration
+- `fast_consumer_config`: Optimized Kafka consumer configuration
+- `fast_poll_interval`: Fast polling interval
+- `fast_max_wait_iterations`: Reduced wait iterations
+- `fast_wait_loop`: Helper for fast wait loops
+
+**Example Usage**:
+```python
+def test_example(fast_poll_interval, fast_max_wait_iterations):
+    # Use optimized settings
+    await asyncio.sleep(fast_poll_interval)
+    for i in range(fast_max_wait_iterations):
+        # Test logic
+        pass
 ```
 
 ## Module-Specific Documentation

@@ -98,8 +98,9 @@ class TestResultReturnIntegration:
             try:
                 await consumer.start()
                 
-                # Give consumer time to process event
-                await asyncio.sleep(5)
+                # Give consumer time to process event (fast wait)
+                fast_poll_interval = float(os.getenv("TEST_POLL_INTERVAL", "0.1"))
+                await asyncio.sleep(fast_poll_interval * 10)  # 1s instead of 5s
                 
                 # Poll for result
                 poller = WorkflowResultPoller(

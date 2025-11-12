@@ -356,7 +356,12 @@ result = await retry_async(
 ```
 
 **Error Classification**:
-- **Transient Errors** (retried): `ConnectionError`, `TimeoutError`, `OSError`, `asyncio.TimeoutError`, Kafka-specific timeout/connection errors
+- **Transient Errors** (retried): 
+  - `ConnectionError`, `TimeoutError`, `OSError`, `asyncio.TimeoutError`
+  - Kafka-specific errors: `KafkaTimeoutError`, `KafkaConnectionError`, `BrokerNotAvailableError`, 
+    `LeaderNotAvailableError`, `NotLeaderForPartitionError`, `RequestTimedOutError`,
+    `CoordinatorNotAvailableError`, `CoordinatorLoadInProgressError`, `NotCoordinatorError`,
+    `GroupCoordinatorNotAvailableError`, `NotEnoughReplicasError`, `NotEnoughReplicasAfterAppendError`
 - **Permanent Errors** (not retried): `ValueError`, `TypeError`, `KeyError`, and other non-retryable errors
 
 ### Dead Letter Queue
@@ -468,10 +473,47 @@ except Exception as e:
     )
 ```
 
+### Timeout Handling
+
+Workflow execution timeouts prevent indefinite hanging of workflow processing:
+
+```python
+from langgraph_integration.processor import WorkflowProcessor
+
+# Create processor with custom timeout (in seconds)
+processor = WorkflowProcessor(
+    result_producer=result_producer,
+    workflow_timeout=600  # 10 minutes
+)
+
+# Or use environment variable
+# WORKFLOW_EXECUTION_TIMEOUT=600
+processor = WorkflowProcessor(result_producer=result_producer)
+```
+
+**Timeout Behavior**:
+- Default timeout: 300 seconds (5 minutes)
+- Configurable via `WORKFLOW_EXECUTION_TIMEOUT` environment variable
+- Can be overridden per processor instance
+- Timeout errors are classified as transient and will trigger retries
+- After timeout, error result is published and event may be sent to DLQ
+
+**Timeout Error Handling**:
+```python
+try:
+    result = await processor.process_workflow_event(event)
+except TimeoutError as e:
+    # Workflow execution exceeded timeout
+    # Error is automatically published to result topic
+    # Event may be sent to DLQ if retries exhausted
+    logger.error(f"Workflow timeout: {e}")
+```
+
 ### Configuration
 
 **Environment Variables**:
 - `KAFKA_DLQ_TOPIC`: Dead letter queue topic name (default: `workflow-events-dlq`)
+- `WORKFLOW_EXECUTION_TIMEOUT`: Workflow execution timeout in seconds (default: `300`)
 - `KAFKA_BOOTSTRAP_SERVERS`: Kafka broker addresses (default: `localhost:9092`)
 
 **Retry Configuration**:

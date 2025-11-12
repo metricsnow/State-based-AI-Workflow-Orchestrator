@@ -13,6 +13,29 @@ Tests for LangGraph Kafka integration, including async consumer, result publishi
 
 **Unit Tests**: Some unit tests use mocks for fast testing, but all functionality is validated in integration tests with real Kafka.
 
+### Test Optimization
+
+Tests use **real services with optimized timeouts** for faster execution:
+
+- **Real Kafka**: All integration tests use real Kafka brokers (no mocks)
+- **Optimized Timeouts**: Faster timeouts (Kafka: 2s, Workflow: 5s) for speed
+- **Faster Polling**: Reduced polling intervals (0.1s) for quicker completion
+- **Configurable**: All settings can be overridden via environment variables
+
+**Test Configuration** (see `project/tests/conftest.py`):
+- `TEST_KAFKA_TIMEOUT`: Kafka timeout (default: 2s)
+- `TEST_WORKFLOW_TIMEOUT`: Workflow timeout (default: 5s)
+- `TEST_POLL_INTERVAL`: Polling interval (default: 0.1s)
+- `TEST_RETRY_DELAY`: Retry delay (default: 0.05s)
+- `TEST_MAX_WAIT_ITERATIONS`: Max wait iterations (default: 10)
+
+**Available Fixtures**:
+- `fast_retry_config`: Optimized retry configuration
+- `fast_consumer_config`: Optimized Kafka consumer config
+- `fast_poll_interval`: Fast polling interval
+- `fast_max_wait_iterations`: Reduced wait iterations
+- `fast_wait_loop`: Helper for fast wait loops
+
 ## Test Files
 
 ### `test_config.py` ✅ Complete

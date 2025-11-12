@@ -9,6 +9,10 @@ import os
 import time
 import pytest
 from uuid import uuid4
+from tests.utils.test_config import (
+    get_test_poll_interval,
+    get_test_max_wait_iterations,
+)
 
 from workflow_events import (
     EventType,
@@ -130,10 +134,14 @@ class TestConsumerIntegration:
             consume_task = asyncio.create_task(consumer.consume_and_process())
             print_status("STEP 11: Consume task created, waiting for events...")
             
-            # Wait for event to be processed (with timeout)
-            for i in range(10):  # Wait up to 5 seconds
+            # Wait for event to be processed (with fast timeout)
+            # Use fast polling interval from test configuration
+            fast_poll_interval = get_test_poll_interval()
+            max_iterations = get_test_max_wait_iterations()
+            
+            for i in range(max_iterations):  # Wait up to 1 second (10 * 0.1s)
                 print_status(f"STEP 12.{i+1}: Waiting... (processed={len(processed_events)})")
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(fast_poll_interval)
                 if processed_events:
                     print_status(f"STEP 13: Event processed! Total: {len(processed_events)}")
                     break
@@ -210,9 +218,12 @@ class TestConsumerIntegration:
             
             consume_task = asyncio.create_task(consumer.consume_and_process())
             
-            # Wait for events to be processed
-            for _ in range(20):  # Wait up to 10 seconds
-                await asyncio.sleep(0.5)
+            # Wait for events to be processed (fast polling)
+            fast_poll_interval = get_test_poll_interval()
+            max_iterations = get_test_max_wait_iterations()
+            
+            for _ in range(max_iterations * 2):  # Wait up to 2 seconds
+                await asyncio.sleep(fast_poll_interval)
                 if len(processed_events) >= 3:
                     break
             
@@ -269,8 +280,9 @@ class TestConsumerIntegration:
             
             consume_task = asyncio.create_task(consumer.consume_and_process())
             
-            # Wait a bit to ensure event is consumed
-            await asyncio.sleep(2)
+            # Wait a bit to ensure event is consumed (fast wait)
+            from tests.utils.test_config import get_fast_sleep_time
+            await asyncio.sleep(get_fast_sleep_time(5))  # 0.5s instead of 2s
             
             consumer.running = False
             consume_task.cancel()

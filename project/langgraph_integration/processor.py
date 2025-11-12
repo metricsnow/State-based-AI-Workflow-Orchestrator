@@ -6,6 +6,7 @@ and execution of LangGraph workflows.
 
 import asyncio
 import logging
+import os
 from typing import Any, Dict, Optional
 
 from workflow_events import WorkflowEvent, EventType
@@ -14,6 +15,9 @@ from langgraph_workflows.multi_agent_workflow import multi_agent_graph
 from langgraph_integration.result_producer import ResultProducer
 
 logger = logging.getLogger(__name__)
+
+# Default workflow execution timeout in seconds (5 minutes)
+DEFAULT_WORKFLOW_TIMEOUT = int(os.getenv("WORKFLOW_EXECUTION_TIMEOUT", "300"))
 
 
 def event_to_multi_agent_state(event: WorkflowEvent) -> MultiAgentState:
@@ -72,16 +76,27 @@ class WorkflowProcessor:
     Attributes:
         result_producer: Optional ResultProducer for publishing results to Kafka.
             If None, results are not published (for testing or backward compatibility).
+        workflow_timeout: Timeout in seconds for workflow execution (default: 300).
     """
     
-    def __init__(self, result_producer: Optional[ResultProducer] = None):
+    def __init__(
+        self,
+        result_producer: Optional[ResultProducer] = None,
+        workflow_timeout: Optional[int] = None,
+    ):
         """Initialize workflow processor.
         
         Args:
             result_producer: Optional ResultProducer instance. If provided,
                 results will be published to Kafka result topic.
+            workflow_timeout: Timeout in seconds for workflow execution.
+                If None, uses WORKFLOW_EXECUTION_TIMEOUT env var or default (300s).
         """
         self.result_producer = result_producer
+        self.workflow_timeout = (
+            workflow_timeout
+            or int(os.getenv("WORKFLOW_EXECUTION_TIMEOUT", str(DEFAULT_WORKFLOW_TIMEOUT)))
+        )
     
     def _extract_result(self, workflow_result: Dict[str, Any]) -> Dict[str, Any]:
         """Extract result data from workflow state.
@@ -133,14 +148,31 @@ class WorkflowProcessor:
             
             # Execute workflow in thread pool to avoid blocking event loop
             # LangGraph workflows are synchronous, so we run them in a thread
+            # Apply timeout to prevent indefinite hanging
             logger.debug(
-                f"Executing LangGraph workflow with thread_id: {thread_id}"
+                f"Executing LangGraph workflow with thread_id: {thread_id}, "
+                f"timeout: {self.workflow_timeout}s"
             )
-            result = await asyncio.to_thread(
-                multi_agent_graph.invoke,
-                initial_state,
-                config=config,
-            )
+            try:
+                result = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        multi_agent_graph.invoke,
+                        initial_state,
+                        config=config,
+                    ),
+                    timeout=self.workflow_timeout,
+                )
+            except asyncio.TimeoutError:
+                timeout_error = TimeoutError(
+                    f"Workflow execution timed out after {self.workflow_timeout}s "
+                    f"for event: {event.event_id}"
+                )
+                logger.error(
+                    f"Workflow execution timeout: {event.event_id}, "
+                    f"workflow_id: {event.workflow_id}",
+                    exc_info=True,
+                )
+                raise timeout_error
             
             logger.info(
                 f"Workflow completed successfully: {event.event_id}, "
