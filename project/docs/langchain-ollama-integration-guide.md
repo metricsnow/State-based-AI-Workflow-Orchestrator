@@ -436,6 +436,7 @@ project/langchain_ollama_integration/
 - **TASK-025**: Ollama Service Docker Integration (Complete)
 - **TASK-026**: Update Requirements with LangChain-Ollama Integration (Complete)
 - **TASK-033**: Set Up Ollama with LangChain Integration (Complete) ✅
+- **[LangGraph LLM Nodes Guide](langgraph-llm-nodes-guide.md)**: LLM nodes for LangGraph workflows (TASK-034) ✅
 - **Setup Guide**: `project/docs/setup-guide.md`
 - **Testing Guide**: `project/tests/langgraph/README.md`
 
@@ -444,7 +445,7 @@ project/langchain_ollama_integration/
 After completing TASK-033:
 1. ✅ Package installed and verified
 2. ✅ Integration module implemented and tested
-3. **TASK-034**: Create LangGraph node with Ollama LLM
+3. ✅ **TASK-034**: Create LangGraph node with Ollama LLM (Complete) - See [LangGraph LLM Nodes Guide](langgraph-llm-nodes-guide.md)
 4. **TASK-035**: Integrate LLM inference in LangGraph workflows
 5. **TASK-036**: Model Download and Validation
 6. **TASK-037**: LLM Integration Testing
