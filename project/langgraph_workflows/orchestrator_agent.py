@@ -43,7 +43,8 @@ def orchestrator_agent(state: MultiAgentState) -> dict[str, Any]:
     1. If workflow is already completed, route to END
     2. If data agent hasn't completed, route to data agent
     3. If analysis agent hasn't completed, route to analysis agent
-    4. If all agents completed, mark workflow as complete and route to END
+    4. If LLM analysis not completed and task requires analysis, route to LLM analysis
+    5. If all agents completed, mark workflow as complete and route to END
 
     Args:
         state: The current multi-agent state containing agent results and
@@ -51,7 +52,7 @@ def orchestrator_agent(state: MultiAgentState) -> dict[str, Any]:
 
     Returns:
         A dictionary containing state updates:
-        - current_agent: The next agent to execute ("data", "analysis", or "end")
+        - current_agent: The next agent to execute ("data", "analysis", "llm_analysis", or "end")
         - completed: True if workflow is complete, otherwise unchanged
 
     Example:
@@ -86,6 +87,7 @@ def orchestrator_agent(state: MultiAgentState) -> dict[str, Any]:
     agent_results = state.get("agent_results", {})
     current_agent = state.get("current_agent", "orchestrator")
     completed = state.get("completed", False)
+    task = state.get("task", "")
 
     # If already completed, route to end
     if completed:
@@ -98,6 +100,14 @@ def orchestrator_agent(state: MultiAgentState) -> dict[str, Any]:
     # Check if analysis agent has completed
     if "analysis" not in agent_results:
         return {"current_agent": "analysis"}
+
+    # Check if LLM analysis not completed and task requires analysis
+    # Route to LLM analysis if task contains analysis-related keywords
+    if "llm_analysis" not in agent_results:
+        task_lower = task.lower()
+        # Route to LLM if task explicitly mentions analysis or decision-making
+        if any(keyword in task_lower for keyword in ["analyze", "analysis", "decision", "insight", "recommend"]):
+            return {"current_agent": "llm_analysis"}
 
     # All agents completed - mark workflow as complete
     return {
@@ -122,6 +132,7 @@ def route_to_agent(state: MultiAgentState) -> str:
         - "end": Terminate workflow (maps to END)
         - "data": Route to data agent node
         - "analysis": Route to analysis agent node
+        - "llm_analysis": Route to LLM analysis node
         - "orchestrator": Route back to orchestrator (default)
 
     Example:

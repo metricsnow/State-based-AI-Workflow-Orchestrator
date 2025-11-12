@@ -46,6 +46,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
 from langgraph_workflows.agent_nodes import analysis_agent, data_agent
+from langgraph_workflows.llm_nodes import llm_analysis_node
 from langgraph_workflows.orchestrator_agent import orchestrator_agent, route_to_agent
 from langgraph_workflows.state import MultiAgentState
 
@@ -55,10 +56,11 @@ checkpointer = InMemorySaver()
 # Build multi-agent graph with orchestrator-worker pattern
 workflow = StateGraph(MultiAgentState)
 
-# Add nodes: orchestrator and worker agents
+# Add nodes: orchestrator, worker agents, and LLM analysis node
 workflow.add_node("orchestrator", orchestrator_agent)
 workflow.add_node("data_agent", data_agent)
 workflow.add_node("analysis_agent", analysis_agent)
+workflow.add_node("llm_analysis", llm_analysis_node)
 
 # Add fixed edge: START -> orchestrator
 workflow.add_edge(START, "orchestrator")
@@ -71,14 +73,16 @@ workflow.add_conditional_edges(
     {
         "data": "data_agent",
         "analysis": "analysis_agent",
+        "llm_analysis": "llm_analysis",
         "end": END,
     },
 )
 
-# Add fixed edges: worker agents -> orchestrator
+# Add fixed edges: worker agents and LLM node -> orchestrator
 # After completing their tasks, agents route back to orchestrator for coordination
 workflow.add_edge("data_agent", "orchestrator")
 workflow.add_edge("analysis_agent", "orchestrator")
+workflow.add_edge("llm_analysis", "orchestrator")
 
 # Compile graph with checkpointer for state persistence
 multi_agent_graph = workflow.compile(checkpointer=checkpointer)

@@ -63,7 +63,7 @@ class LLMState(TypedDict):
 
 
 def create_llm_node(
-    model: str = "llama2:13b",
+    model: Optional[str] = None,
     prompt_template: Optional[str] = None,
     temperature: float = 0.7,
     **kwargs
@@ -75,7 +75,9 @@ def create_llm_node(
     Ollama LLM and returns structured output with status and metadata.
 
     Args:
-        model: Ollama model name (default: "llama2:13b")
+        model: Ollama model name (defaults to OLLAMA_MODEL env var or "llama3.2:latest").
+               If None, uses get_ollama_model() to get default from environment.
+               Local models: llama3.2:latest, qwen2.5vl:7b, magistral:24b, etc.
         prompt_template: Optional prompt template string. If provided, uses
             {input} placeholder for input text. If None, passes input directly
             to LLM.
@@ -106,6 +108,11 @@ def create_llm_node(
         assert len(result["output"]) > 0
         ```
     """
+    # Use default model if not provided
+    if model is None:
+        from langchain_ollama_integration import get_ollama_model
+        model = get_ollama_model()
+    
     # Create LLM instance
     llm = create_ollama_llm(model=model, temperature=temperature, **kwargs)
 
@@ -173,15 +180,27 @@ def create_llm_node(
             }
 
         except Exception as e:
-            logger.error(f"Error in LLM node: {e}", exc_info=True)
+            error_msg = str(e)
+            logger.error(f"Error in LLM node: {error_msg}", exc_info=True)
+            
+            # Provide helpful error message for model not found
+            if "not found" in error_msg.lower() or "404" in error_msg:
+                suggestion = (
+                    f"Model '{model}' not found. "
+                    f"Available models: Use 'ollama list' to see installed models. "
+                    f"To download: 'ollama pull {model}' or use a different model like 'llama2', 'mistral', etc."
+                )
+                logger.warning(suggestion)
+            
             return {
                 "input": state.get("input", ""),
                 "output": "",
                 "status": "error",
                 "metadata": {
                     **state.get("metadata", {}),
-                    "error": str(e),
+                    "error": error_msg,
                     "model": model,
+                    "error_type": type(e).__name__,
                 },
             }
 
@@ -194,16 +213,16 @@ def llm_analysis_node(state: MultiAgentState) -> Dict[str, Any]:
     This node integrates with MultiAgentState and provides AI-powered analysis
     capabilities. It extracts the task from state, processes it through the
     Ollama LLM with a specialized analysis prompt, and updates the state with
-    analysis results.
+    analysis results in agent_results for consistency with other agents.
 
     Args:
         state: MultiAgentState containing task and agent results
 
     Returns:
         Dictionary with state updates:
-        - llm_analysis: Analysis result from LLM
-        - llm_status: Status of LLM processing
-        - metadata: Updated metadata with LLM processing info
+        - agent_results: Updated with llm_analysis entry containing result, status, metadata
+        - metadata: Updated with LLM processing metadata
+        - current_agent: Set to "orchestrator" to route back to orchestrator
 
     Example:
         ```python
@@ -218,24 +237,28 @@ def llm_analysis_node(state: MultiAgentState) -> Dict[str, Any]:
             "metadata": {}
         }
         result = llm_analysis_node(state)
-        assert "llm_analysis" in result
-        assert result["llm_status"] in ["completed", "error"]
+        assert "llm_analysis" in result["agent_results"]
+        assert result["agent_results"]["llm_analysis"]["status"] in ["completed", "error"]
         ```
     """
-    prompt_template = """You are an AI assistant specializing in data analysis.
+    prompt_template = """You are an AI assistant specializing in data analysis and decision-making.
 
-Task: {input}
+{input}
 
-Provide a detailed analysis with clear conclusions and actionable insights."""
+Provide a detailed analysis with clear conclusions and recommendations."""
 
     # Create LLM node with analysis prompt
+    # Use environment default or "llama2" as fallback
+    from langchain_ollama_integration import get_ollama_model
+    
+    default_model = get_ollama_model()
     node = create_llm_node(
-        model="llama2:13b",
+        model=default_model,
         prompt_template=prompt_template,
         temperature=0.7,
     )
 
-    # Extract task from state
+    # Extract task and agent results from state
     task = state.get("task", "")
     agent_results = state.get("agent_results", {})
 
@@ -245,12 +268,22 @@ Provide a detailed analysis with clear conclusions and actionable insights."""
     # Include data agent results if available
     if "data" in agent_results:
         data_result = agent_results["data"]
-        input_text += f"Data Context: {data_result}\n\n"
+        # Extract result string from data agent result
+        if isinstance(data_result, dict):
+            data_str = data_result.get("result", str(data_result))
+        else:
+            data_str = str(data_result)
+        input_text += f"Data: {data_str}\n\n"
 
     # Include analysis agent results if available
     if "analysis" in agent_results:
         analysis_result = agent_results["analysis"]
-        input_text += f"Previous Analysis: {analysis_result}\n\n"
+        # Extract result string from analysis agent result
+        if isinstance(analysis_result, dict):
+            analysis_str = analysis_result.get("result", str(analysis_result))
+        else:
+            analysis_str = str(analysis_result)
+        input_text += f"Previous Analysis: {analysis_str}\n\n"
 
     input_text += "Provide a comprehensive AI-powered analysis."
 
@@ -265,7 +298,18 @@ Provide a detailed analysis with clear conclusions and actionable insights."""
     # Process with LLM
     llm_result = node(llm_state)
 
-    # Update state with LLM result
+    # Update agent_results with LLM analysis result (consistent with other agents)
+    updated_results = {
+        **agent_results,
+        "llm_analysis": {
+            "agent": "llm_analysis",
+            "result": llm_result["output"],
+            "status": llm_result["status"],
+            "metadata": llm_result["metadata"],
+        },
+    }
+
+    # Update metadata with LLM processing info
     updated_metadata = {
         **state.get("metadata", {}),
         "llm_metadata": llm_result["metadata"],
@@ -273,8 +317,8 @@ Provide a detailed analysis with clear conclusions and actionable insights."""
 
     return {
         **state,
-        "llm_analysis": llm_result["output"],
-        "llm_status": llm_result["status"],
+        "agent_results": updated_results,
         "metadata": updated_metadata,
+        "current_agent": "orchestrator",  # Route back to orchestrator after LLM analysis
     }
 

@@ -12,12 +12,35 @@ import time
 
 import pytest
 
+from langchain_ollama_integration import get_ollama_model
 from langgraph_workflows.llm_nodes import (
     LLMState,
     create_llm_node,
     llm_analysis_node,
 )
 from langgraph_workflows.state import MultiAgentState
+
+
+def get_fastest_test_model() -> str:
+    """Get the fastest available model for tests.
+    
+    Model Selection Priority (based on benchmark analysis):
+    1. gemma3:1b (~1.3 GB, 0.492s) - Best balance: small size + fast inference
+    2. phi4-mini:3.8b (2.5 GB, 0.447s) - Fastest but larger
+    3. llama3.2:latest (2.0 GB, 0.497s) - Good fallback
+    
+    Returns:
+        Model name string. Uses fastest available model for test execution.
+        Override with TEST_OLLAMA_MODEL env var if needed.
+    """
+    import os
+    test_model = os.getenv("TEST_OLLAMA_MODEL")
+    if test_model:
+        return test_model
+    
+    # Priority: gemma3:1b (best balance) > phi4-mini:3.8b (fastest) > llama3.2:latest
+    # gemma3:1b is almost as fast as phi4-mini:3.8b (0.045s difference) but 48% smaller
+    return "gemma3:1b"  # Best balance: small size + fast inference
 
 
 def check_ollama_available() -> bool:
@@ -41,7 +64,7 @@ class TestLLMNodeCreation:
         print("\n[TEST] Creating LLM node with default parameters...")
         start_time = time.time()
 
-        node = create_llm_node(model="llama2:13b")
+        node = create_llm_node(model=get_fastest_test_model())
 
         elapsed = time.time() - start_time
         print(f"[STATUS] Node created in {elapsed:.3f}s")
@@ -56,7 +79,7 @@ class TestLLMNodeCreation:
         start_time = time.time()
 
         node = create_llm_node(
-            model="llama2:13b",
+            model=get_fastest_test_model(),
             prompt_template="Analyze: {input}",
             temperature=0.7,
         )
@@ -89,7 +112,7 @@ class TestLLMNodeExecution:
         print("\n[TEST] Testing empty input handling...")
         start_time = time.time()
 
-        node = create_llm_node(model="llama2:13b")
+        node = create_llm_node(model=get_fastest_test_model())
         state: LLMState = {
             "input": "",
             "output": "",
@@ -118,7 +141,7 @@ class TestLLMNodeExecution:
 
         print("[STATUS] Ollama service available - proceeding with test")
 
-        node = create_llm_node(model="llama2:13b")
+        node = create_llm_node(model=get_fastest_test_model())
         state: LLMState = {
             "input": "Say 'OK' in one word.",
             "output": "",
@@ -155,7 +178,7 @@ class TestLLMNodeExecution:
             pytest.skip("Ollama service not available")
 
         node = create_llm_node(
-            model="llama2:13b",
+            model=get_fastest_test_model(),
             prompt_template="Task: {input}\n\nProvide a brief response:",
         )
 
@@ -190,7 +213,7 @@ class TestLLMNodeExecution:
             print("[SKIP] Ollama service not available - skipping metadata test")
             pytest.skip("Ollama service not available")
 
-        node = create_llm_node(model="llama2:13b")
+        node = create_llm_node(model=get_fastest_test_model())
         state: LLMState = {
             "input": "Say OK",
             "output": "",
@@ -242,15 +265,18 @@ class TestLLMAnalysisNode:
         total_time = time.time() - start_time
         print(f"[STATUS] Analysis node completed in {inference_time:.3f}s (total: {total_time:.3f}s)")
 
-        assert "llm_analysis" in result
-        assert "llm_status" in result
-        assert result["llm_status"] in ["completed", "error"]
+        # LLM results are now in agent_results
+        assert "agent_results" in result
+        assert "llm_analysis" in result["agent_results"]
+        llm_result = result["agent_results"]["llm_analysis"]
+        assert llm_result["status"] in ["completed", "error"]
 
-        if result["llm_status"] == "completed":
-            assert len(result["llm_analysis"]) > 0
-            print(f"[PASS] Analysis returned: {result['llm_analysis'][:50]}...")
+        if llm_result["status"] == "completed":
+            assert len(llm_result["result"]) > 0
+            print(f"[PASS] Analysis returned: {llm_result['result'][:50]}...")
         else:
-            print(f"[WARN] Analysis returned error: {result.get('metadata', {}).get('llm_metadata', {}).get('error', 'Unknown')}")
+            error_msg = llm_result.get("metadata", {}).get("error", "Unknown")
+            print(f"[WARN] Analysis returned error: {error_msg}")
 
     def test_llm_analysis_node_with_data_context(self) -> None:
         """Test llm_analysis_node includes data agent results in context (PRODUCTION)."""
@@ -284,13 +310,17 @@ class TestLLMAnalysisNode:
         total_time = time.time() - start_time
         print(f"[STATUS] Context test completed in {inference_time:.3f}s (total: {total_time:.3f}s)")
 
-        assert "llm_analysis" in result
-        assert result["llm_status"] in ["completed", "error"]
+        # LLM results are now in agent_results
+        assert "agent_results" in result
+        assert "llm_analysis" in result["agent_results"]
+        llm_result = result["agent_results"]["llm_analysis"]
+        assert llm_result["status"] in ["completed", "error"]
 
-        if result["llm_status"] == "completed":
+        if llm_result["status"] == "completed":
             print("[PASS] Analysis with context completed successfully")
         else:
-            print(f"[WARN] Context test returned error")
+            error_msg = llm_result.get("metadata", {}).get("error", "Unknown")
+            print(f"[WARN] Context test returned error: {error_msg}")
 
     def test_llm_analysis_node_preserves_state(self) -> None:
         """Test llm_analysis_node preserves all state fields (PRODUCTION)."""
@@ -319,8 +349,12 @@ class TestLLMAnalysisNode:
         # Verify all state fields are preserved
         assert result["messages"] == state["messages"]
         assert result["task"] == state["task"]
-        assert result["agent_results"] == state["agent_results"]
-        assert result["current_agent"] == state["current_agent"]
+        # agent_results should contain existing results plus llm_analysis
+        assert "existing" in result["agent_results"]
+        assert result["agent_results"]["existing"] == state["agent_results"]["existing"]
+        assert "llm_analysis" in result["agent_results"]
+        # current_agent is updated to orchestrator (expected behavior)
+        assert result["current_agent"] == "orchestrator"
         assert result["completed"] == state["completed"]
         assert "existing_meta" in result["metadata"]
         print("[PASS] All state fields correctly preserved")
@@ -337,7 +371,7 @@ class TestLLMNodeIntegration:
         try:
             from langchain_ollama_integration import create_ollama_llm
 
-            llm = create_ollama_llm(model="llama2:13b")
+            llm = create_ollama_llm(model=get_fastest_test_model())
             assert llm is not None
 
             elapsed = time.time() - start_time
@@ -363,7 +397,7 @@ class TestLLMNodeIntegration:
 
         # Create a simple workflow with LLM node
         node = create_llm_node(
-            model="llama2:13b",
+            model=get_fastest_test_model(),
             prompt_template="Analyze this: {input}",
         )
 

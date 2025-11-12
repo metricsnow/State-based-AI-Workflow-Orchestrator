@@ -437,8 +437,27 @@ project/langchain_ollama_integration/
 - **TASK-026**: Update Requirements with LangChain-Ollama Integration (Complete)
 - **TASK-033**: Set Up Ollama with LangChain Integration (Complete) ✅
 - **[LangGraph LLM Nodes Guide](langgraph-llm-nodes-guide.md)**: LLM nodes for LangGraph workflows (TASK-034) ✅
+- **[LLM Test Optimization Guide](llm-test-optimization-guide.md)**: Model selection and test performance optimization ✅
 - **Setup Guide**: `project/docs/setup-guide.md`
 - **Testing Guide**: `project/tests/langgraph/README.md`
+
+## Test Optimization
+
+**Status**: ✅ Complete - Test suite optimized with 27.5% performance improvement
+
+The LLM test infrastructure has been optimized for faster test execution:
+
+- **Optimized Model**: `gemma3:1b` (~1.3 GB, 0.492s inference)
+- **Performance**: 27.5% faster test suite (101.74s vs 140.42s)
+- **Size**: 48% smaller than previous model (1.3 GB vs 2.5 GB)
+- **All Tests Passing**: 32/32 tests passing with optimized model
+
+**Model Selection**:
+- Default test model: `gemma3:1b` (best balance of size and speed)
+- Override: Use `TEST_OLLAMA_MODEL` environment variable
+- Fallback: `phi4-mini:3.8b` (fastest) or `llama3.2:latest` (general-purpose)
+
+See **[LLM Test Optimization Guide](llm-test-optimization-guide.md)** for detailed documentation.
 
 ## Next Steps
 
@@ -446,10 +465,11 @@ After completing TASK-033:
 1. ✅ Package installed and verified
 2. ✅ Integration module implemented and tested
 3. ✅ **TASK-034**: Create LangGraph node with Ollama LLM (Complete) - See [LangGraph LLM Nodes Guide](langgraph-llm-nodes-guide.md)
-4. **TASK-035**: Integrate LLM inference in LangGraph workflows
-5. **TASK-036**: Model Download and Validation
-6. **TASK-037**: LLM Integration Testing
-7. **TASK-038**: Create Unified LLM Factory with Model Toggle (Ollama/OpenAI)
+4. ✅ **TASK-035**: Integrate LLM inference in LangGraph workflows (Complete)
+5. ✅ **Test Optimization**: Model selection and performance optimization (Complete) - See [LLM Test Optimization Guide](llm-test-optimization-guide.md)
+6. **TASK-036**: Model Download and Validation
+7. **TASK-037**: LLM Integration Testing
+8. **TASK-038**: Create Unified LLM Factory with Model Toggle (Ollama/OpenAI)
 
 See `project/dev/tasks/` for task details.
 

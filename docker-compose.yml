@@ -107,8 +107,10 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: airflow-ollama
-    ports:
-      - "11434:11434"
+    # Port mapping commented out to use local Ollama instance instead
+    # Local Ollama has all models installed and is shared across projects
+    # ports:
+    #   - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     environment:
@@ -122,6 +124,9 @@ services:
     networks:
       - airflow-network
     restart: unless-stopped
+    # Service disabled - using local Ollama instance on localhost:11434
+    profiles:
+      - disabled
 
 volumes:
   postgres_data:

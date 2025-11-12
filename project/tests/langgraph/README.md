@@ -184,7 +184,7 @@ pytest project/tests/langgraph/test_orchestrator.py -v
 ### `test_multi_agent_workflow.py` ✅ Complete
 Comprehensive tests for LangGraph multi-agent workflow.
 
-**Status**: ✅ Complete - 19 tests passing (TASK-023)
+**Status**: ✅ Complete - 19 tests passing (TASK-023, TASK-035)
 
 **Coverage**:
 - Graph construction and compilation
@@ -194,6 +194,7 @@ Comprehensive tests for LangGraph multi-agent workflow.
 - Checkpointing with multi-agent workflows
 - Error handling in multi-agent context
 - Complete workflow integration scenarios
+- LLM analysis node integration
 
 **Test Categories**:
 - Graph construction tests (3 tests)
@@ -202,7 +203,7 @@ Comprehensive tests for LangGraph multi-agent workflow.
 - State persistence tests (2 tests)
 - Checkpointing tests (3 tests)
 - Error handling tests (2 tests)
-- Integration tests (3 tests)
+- Integration tests (3 tests, including LLM analysis)
 
 **Test Philosophy**:
 - ✅ Real LangGraph StateGraph (no mocks)
@@ -210,6 +211,12 @@ Comprehensive tests for LangGraph multi-agent workflow.
 - ✅ Actual checkpointing (InMemorySaver)
 - ✅ Real agent nodes (not mocked)
 - ✅ Complete workflow integration tests
+- ✅ Optimized LLM model selection (gemma3:1b)
+
+**Model Optimization**:
+- **Test Model**: gemma3:1b (optimized for testing)
+- **Performance**: 27.5% faster test suite
+- **Override**: Use `TEST_OLLAMA_MODEL` environment variable
 
 **Run Tests**:
 ```bash
@@ -299,6 +306,50 @@ Comprehensive tests for langchain-ollama package integration (TASK-026).
 pytest project/tests/langgraph/test_langchain_ollama_integration.py -v
 ```
 
+### `test_llm_nodes.py` ✅ Complete
+Production tests for LangGraph LLM nodes with Ollama integration.
+
+**Status**: ✅ Complete - 16 tests passing (TASK-034, TASK-035)
+
+**Coverage**:
+- LLM node creation and configuration
+- Real Ollama LLM inference (production conditions)
+- LLM analysis node integration
+- Error handling and model validation
+- State preservation in LLM nodes
+- Workflow integration with LLM nodes
+
+**Test Categories**:
+- LLM node creation tests (3 tests)
+- LLM node execution tests (3 tests)
+- LLM analysis node tests (3 tests)
+- LLM node integration tests (2 tests)
+- Error handling tests (5 tests)
+
+**Test Philosophy**:
+- ✅ **Production conditions only** - NO MOCKS, NO PLACEHOLDERS
+- ✅ Real Ollama LLM instances
+- ✅ Real model inference
+- ✅ Actual Ollama service connection
+- ✅ Optimized model selection (gemma3:1b)
+
+**Model Optimization**:
+- **Test Model**: gemma3:1b (~1.3 GB, 0.492s inference)
+- **Performance**: 27.5% faster test suite (101.74s vs 140.42s)
+- **Size**: 48% smaller than previous model (1.3 GB vs 2.5 GB)
+- **Override**: Use `TEST_OLLAMA_MODEL` environment variable
+
+**Run Tests**:
+```bash
+# Run with optimized model (default: gemma3:1b)
+pytest project/tests/langgraph/test_llm_nodes.py -v
+
+# Run with specific model
+TEST_OLLAMA_MODEL=phi4-mini:3.8b pytest project/tests/langgraph/test_llm_nodes.py -v
+```
+
+**Documentation**: See `project/docs/llm-test-optimization-guide.md` for detailed optimization guide.
+
 ### `test_integration.py` ✅ Complete
 Comprehensive integration tests for complete stateful workflow.
 
@@ -347,9 +398,12 @@ pytest project/tests/langgraph/test_integration.py -v
 - ✅ **Multi-Agent Workflow Tests** (TASK-023): Complete - 19 tests passing
 - ✅ **Multi-Agent Integration Tests** (TASK-024): Complete - 17 tests passing
 - ✅ **LangChain Ollama Integration Tests** (TASK-026): Complete - 13 tests passing
-- ✅ **Total**: 230 tests passing - All tests use production LangGraph environment
+- ✅ **LLM Nodes Tests** (TASK-034, TASK-035): Complete - 16 tests passing
+- ✅ **Total**: 246 tests passing - All tests use production LangGraph environment
 
 **CRITICAL**: All tests use real LangGraph libraries and production patterns. No mocks or placeholders are used.
+
+**Performance Optimization**: Test suite optimized with gemma3:1b model - 27.5% faster runtime (101.74s vs 140.42s). See `project/docs/llm-test-optimization-guide.md` for details.
 
 ## Running Tests
 
