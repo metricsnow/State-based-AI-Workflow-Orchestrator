@@ -1,0 +1,46 @@
+groups:
+  - name: airflow_alerts
+    interval: 30s
+    rules:
+      - alert: AirflowDAGFailed
+        expr: airflow_dag_run_state{state="failed"} > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Airflow DAG {{ $labels.dag_id }} has failed"
+          description: "DAG {{ $labels.dag_id }} has been in failed state for more than 5 minutes"
+      
+      - alert: AirflowTaskFailed
+        expr: airflow_task_instance_state{state="failed"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Airflow task {{ $labels.task_id }} has failed"
+          description: "Task {{ $labels.task_id }} in DAG {{ $labels.dag_id }} has failed"
+
+  - name: kafka_alerts
+    interval: 30s
+    rules:
+      - alert: KafkaConsumerLag
+        expr: kafka_consumer_lag_sum > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka consumer lag is high: {{ $value }}"
+          description: "Kafka consumer lag has exceeded 1000 messages for more than 10 minutes"
+
+  - name: prometheus_alerts
+    interval: 30s
+    rules:
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target {{ $labels.job }} is down"
+          description: "Target {{ $labels.instance }} in job {{ $labels.job }} has been down for more than 5 minutes"
+
