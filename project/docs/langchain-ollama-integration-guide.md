@@ -1,20 +1,25 @@
-# LangChain-Ollama Integration Guide
+# LangChain LLM Integration Guide
 
 ## Overview
 
-This guide documents the LangChain-Ollama integration setup (TASK-026, TASK-033) for using Ollama LLM models with LangChain and LangGraph workflows.
+This guide documents the unified LLM integration setup (TASK-026, TASK-033, TASK-038) for using Ollama and OpenAI LLM models with LangChain and LangGraph workflows.
 
-**Status**: ✅ TASK-033 Complete - Integration module implemented and tested
+**Status**: 
+- ✅ TASK-033 Complete - Ollama integration module implemented and tested
+- ✅ TASK-038 Complete - Unified LLM factory with OpenAI and Ollama support
 
 ## Package Installation
 
 ### Requirements
 
-The `langchain-ollama` package is included in `requirements.txt`:
+The required packages are included in `requirements.txt`:
 
 ```txt
 # Ollama Integration (TASK-026: Phase 3)
 langchain-ollama>=0.1.0
+
+# OpenAI Integration (TASK-038: Phase 3)
+langchain-openai>=0.1.0
 ```
 
 ### Installation
@@ -67,11 +72,42 @@ from langchain_ollama.llms import OllamaLLM
 
 **Note**: The `langchain_community.llms.Ollama` import is deprecated. Always use `langchain_ollama.OllamaLLM` instead.
 
-## Integration Module (TASK-033)
+## Unified LLM Integration Module (TASK-033, TASK-038)
 
-### Using the Integration Module
+### Overview
 
-The `langchain_ollama_integration` module provides a factory pattern for creating Ollama LLM instances with proper configuration management.
+The `langchain_ollama_integration` module provides a unified factory pattern for creating LLM instances from multiple providers (Ollama and OpenAI) with seamless switching via environment variables.
+
+**Key Features**:
+- Unified interface for Ollama and OpenAI
+- Environment-based provider selection
+- Automatic fallback mechanism (OpenAI → Ollama)
+- Cost optimization (defaults to cheapest OpenAI model: `gpt-4o-mini`)
+- Backward compatible with existing Ollama code
+
+### Using the Unified Factory (Recommended)
+
+The unified factory automatically selects the provider based on environment configuration:
+
+```python
+from langchain_ollama_integration import create_llm, get_llm
+
+# Use default (OpenAI gpt-4o-mini - cheapest)
+llm = create_llm()
+
+# Explicitly use OpenAI
+llm = create_llm(provider="openai", model="gpt-4o-mini")
+
+# Explicitly use Ollama
+llm = create_llm(provider="ollama", model="llama3.2:latest")
+
+# Auto mode (try OpenAI, fallback to Ollama if OpenAI fails)
+llm = create_llm(provider="auto")
+```
+
+### Using Ollama-Specific Functions (Backward Compatible)
+
+The original Ollama-specific functions are still available for backward compatibility:
 
 ```python
 from langchain_ollama_integration import create_ollama_llm, get_ollama_llm
@@ -90,11 +126,25 @@ llm = create_ollama_llm(
 )
 ```
 
+### Using OpenAI-Specific Functions
+
+```python
+from langchain_ollama_integration import create_openai_llm
+
+# Create OpenAI LLM with default (gpt-4o-mini - cheapest)
+llm = create_openai_llm()
+
+# Create OpenAI LLM with custom model
+llm = create_openai_llm(model="gpt-4o-mini", temperature=0.7)
+```
+
 **Benefits**:
 - Environment variable configuration
 - Automatic Docker/local environment detection
 - Consistent error handling and logging
 - Production-ready factory pattern
+- Cost optimization with cheapest model defaults
+- Seamless provider switching
 
 ## Basic Usage
 
@@ -422,8 +472,14 @@ project/langchain_ollama_integration/
 ```
 
 **Exports**:
-- `create_ollama_llm()` - Factory function for creating OllamaLLM instances
-- `get_ollama_llm()` - Get default LLM instance using environment configuration
+- `create_llm()` - Unified factory function for creating LLM instances (Ollama or OpenAI)
+- `get_llm()` - Get default LLM instance using environment configuration
+- `create_ollama_llm()` - Factory function for creating OllamaLLM instances (backward compatible)
+- `create_openai_llm()` - Factory function for creating OpenAI ChatOpenAI instances
+- `get_ollama_llm()` - Get default Ollama LLM instance using environment configuration
+- `get_llm_provider()` - Get current LLM provider from environment
+- `get_openai_model()` - Get OpenAI model from environment (default: `gpt-4o-mini`)
+- `get_ollama_model()` - Get Ollama model from environment
 
 **Features**:
 - Environment variable configuration (`OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `DOCKER_ENV`)

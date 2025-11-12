@@ -42,16 +42,20 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
 ## Phase 3 Documentation
 
 ### LLM Integration
-- **[LangChain-Ollama Integration Guide](langchain-ollama-integration-guide.md)** - LangChain-Ollama package integration
+- **[LangChain LLM Integration Guide](langchain-ollama-integration-guide.md)** - Unified LLM integration (Ollama and OpenAI)
   - ✅ TASK-026: LangChain-Ollama Package Integration (Complete)
   - ✅ TASK-033: Set Up Ollama with LangChain Integration (Complete)
+  - ✅ TASK-038: Unified LLM Factory with Model Toggle (Complete)
   - Package installation, correct import patterns, basic usage
-  - Integration module with factory pattern (`langchain_ollama_integration`)
+  - Unified factory pattern supporting Ollama and OpenAI (`langchain_ollama_integration`)
   - Environment variable configuration support
+  - Default to cheapest OpenAI model (`gpt-4o-mini`) for cost optimization
+  - Automatic fallback mechanism (OpenAI → Ollama)
   - LangChain and LangGraph integration examples
   - Compatibility verification, troubleshooting
-  - 21 comprehensive production tests (20 passing, 1 skipped), all passing
+  - 20 comprehensive production tests, all passing
   - **CRITICAL**: All tests use production conditions - no mocks, no placeholders
+  - **COST PROTECTION**: OpenAI tests disabled by default (set `ENABLE_OPENAI_TESTS=true` to enable)
 - **[Ollama Model Management Guide](ollama-model-management-guide.md)** - Ollama model download and validation
   - ✅ TASK-036: Model Download and Validation (Complete)
   - Model download script, validation script, Docker setup script
@@ -59,7 +63,10 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
   - Integration with LangChain-Ollama integration
 - **[LangGraph LLM Nodes Guide](langgraph-llm-nodes-guide.md)** - LLM nodes for LangGraph workflows
   - ✅ TASK-034: Create LangGraph Node with Ollama LLM (Complete)
+  - ✅ TASK-038: Unified LLM Factory Integration (Complete)
   - Factory pattern for creating configurable LLM nodes
+  - Unified LLM factory supporting Ollama and OpenAI providers
+  - Automatic provider selection via environment variables
   - Prompt templating support with LangChain PromptTemplate
   - Integration with MultiAgentState for multi-agent workflows
   - Error handling and graceful failure recovery
@@ -208,7 +215,8 @@ docs/
 ├── langgraph-conditional-routing-guide.md  # Conditional routing (TASK-017)
 ├── langgraph-checkpointing-guide.md  # Checkpointing (TASK-018)
 ├── langgraph-agent-nodes-guide.md  # Agent nodes (TASK-021)
-├── langgraph-llm-nodes-guide.md  # LLM nodes (TASK-034)
+├── langgraph-llm-nodes-guide.md  # LLM nodes (TASK-034, TASK-038)
+├── unified-llm-factory-guide.md  # Unified LLM factory (TASK-038)
 ├── langgraph-orchestrator-guide.md  # Orchestrator agent (TASK-022)
 ├── langgraph-multi-agent-workflow-guide.md  # Multi-agent workflow (TASK-023)
 ├── langchain-ollama-integration-guide.md  # LangChain-Ollama integration (TASK-026)

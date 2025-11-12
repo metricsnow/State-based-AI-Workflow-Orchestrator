@@ -1,13 +1,16 @@
 # LangGraph LLM Nodes Guide
 
-Complete guide to LLM nodes for LangGraph workflows with Ollama integration.
+Complete guide to LLM nodes for LangGraph workflows with unified LLM integration (Ollama and OpenAI).
 
 ## Overview
 
-LLM nodes enable AI-powered decision making and analysis in LangGraph workflows. This guide covers the LLM node implementations in `project/langgraph_workflows/llm_nodes.py` that integrate Ollama LLM for inference within stateful workflows.
+LLM nodes enable AI-powered decision making and analysis in LangGraph workflows. This guide covers the LLM node implementations in `project/langgraph_workflows/llm_nodes.py` that integrate with the unified LLM factory (TASK-038) supporting both Ollama and OpenAI providers.
 
 **Key Features**:
 - Factory pattern for creating configurable LLM nodes
+- Unified LLM factory supporting Ollama and OpenAI
+- Automatic provider selection via environment variables
+- Default to cheapest OpenAI model (`gpt-4o-mini`) for cost optimization
 - Prompt templating support with LangChain PromptTemplate
 - Error handling and graceful failure recovery
 - Integration with MultiAgentState for multi-agent workflows
@@ -39,10 +42,14 @@ result = node(state)
 ```
 
 **Parameters**:
-- `model`: Ollama model name (default: "llama2:13b")
+- `model`: Model name (provider-specific)
+  - For Ollama: defaults to `OLLAMA_MODEL` env var or "llama3.2:latest"
+  - For OpenAI: defaults to `OPENAI_MODEL` env var or "gpt-4o-mini" (cheapest)
+- `provider`: Explicit provider override ('ollama', 'openai', 'auto')
+  - If None, uses `LLM_PROVIDER` env var (default: 'openai')
 - `prompt_template`: Optional prompt template string with `{input}` placeholder
 - `temperature`: Temperature for generation (default: 0.7)
-- `**kwargs`: Additional arguments passed to `create_ollama_llm`
+- `**kwargs`: Additional arguments passed to unified LLM factory
 
 **Returns**: A node function that accepts `LLMState` and returns `LLMState`
 
@@ -233,23 +240,36 @@ result = llm_analysis_node(state)
 
 ### Environment Variables
 
-LLM nodes use the Ollama integration from `langchain_ollama_integration`, which supports:
+LLM nodes use the unified LLM factory from `langchain_ollama_integration` (TASK-038), which supports:
 
+**Provider Configuration**:
+- `LLM_PROVIDER`: Provider selection ('ollama', 'openai', 'auto', default: 'openai')
+- `OPENAI_API_KEY`: OpenAI API key (required for OpenAI provider)
+- `OPENAI_MODEL`: OpenAI model name (default: 'gpt-4o-mini' - cheapest)
+
+**Ollama Configuration**:
 - `OLLAMA_BASE_URL`: Ollama service URL (default: "http://localhost:11434")
-- `OLLAMA_MODEL`: Default model name (default: "llama2:13b")
+- `OLLAMA_MODEL`: Default Ollama model name (default: "llama3.2:latest")
 - `DOCKER_ENV`: Set to "true" to use Docker service name ("http://ollama:11434")
 
 ### Model Selection
 
 ```python
-# Use default model from environment
+# Use default (OpenAI gpt-4o-mini - cheapest)
 node = create_llm_node()
 
-# Specify model explicitly
-node = create_llm_node(model="llama2:7b")
+# Use OpenAI with explicit model
+node = create_llm_node(provider="openai", model="gpt-4o-mini")
+
+# Use Ollama with explicit model
+node = create_llm_node(provider="ollama", model="llama2:7b")
+
+# Auto mode (try OpenAI, fallback to Ollama)
+node = create_llm_node(provider="auto")
 
 # Use different model for analysis
 analysis_node = create_llm_node(
+    provider="ollama",
     model="mistral:7b",
     prompt_template="Analyze: {input}"
 )

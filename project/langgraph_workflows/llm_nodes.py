@@ -36,7 +36,7 @@ from typing import Any, Callable, Dict, Optional
 from langchain_core.prompts import PromptTemplate
 from typing_extensions import TypedDict
 
-from langchain_ollama_integration import create_ollama_llm
+from langchain_ollama_integration import create_llm, create_ollama_llm
 from langgraph_workflows.state import MultiAgentState
 
 logger = logging.getLogger(__name__)
@@ -66,23 +66,28 @@ def create_llm_node(
     model: Optional[str] = None,
     prompt_template: Optional[str] = None,
     temperature: float = 0.7,
+    provider: Optional[str] = None,
     **kwargs
 ) -> Callable[[LLMState], LLMState]:
-    """Create a LangGraph node that uses Ollama LLM.
+    """Create a LangGraph node that uses unified LLM factory.
 
     This factory function creates a reusable LLM node function that can be
     added to LangGraph workflows. The node processes input text through the
-    Ollama LLM and returns structured output with status and metadata.
+    LLM (Ollama or OpenAI based on configuration) and returns structured
+    output with status and metadata.
 
     Args:
-        model: Ollama model name (defaults to OLLAMA_MODEL env var or "llama3.2:latest").
-               If None, uses get_ollama_model() to get default from environment.
-               Local models: llama3.2:latest, qwen2.5vl:7b, magistral:24b, etc.
+        model: Model name (provider-specific).
+               For Ollama: defaults to OLLAMA_MODEL env var or "llama3.2:latest"
+               For OpenAI: defaults to OPENAI_MODEL env var or "gpt-4o-mini" (cheapest)
+               If None, uses provider defaults from environment.
         prompt_template: Optional prompt template string. If provided, uses
             {input} placeholder for input text. If None, passes input directly
             to LLM.
         temperature: Temperature for generation (default: 0.7)
-        **kwargs: Additional arguments passed to create_ollama_llm
+        provider: Explicit provider override ('ollama', 'openai', 'auto').
+                  If None, uses LLM_PROVIDER env var (default: 'openai').
+        **kwargs: Additional arguments passed to create_llm
 
     Returns:
         A node function that accepts LLMState and returns LLMState
@@ -108,13 +113,26 @@ def create_llm_node(
         assert len(result["output"]) > 0
         ```
     """
-    # Use default model if not provided
-    if model is None:
-        from langchain_ollama_integration import get_ollama_model
-        model = get_ollama_model()
+    # Create LLM instance using unified factory
+    # Factory automatically selects provider from environment or explicit override
+    llm = create_llm(provider=provider, model=model, temperature=temperature, **kwargs)
     
-    # Create LLM instance
-    llm = create_ollama_llm(model=model, temperature=temperature, **kwargs)
+    # Get model name for metadata (from LLM instance or parameters)
+    model_name = model
+    if model_name is None:
+        # Try to get from LLM instance attributes
+        if hasattr(llm, 'model_name'):
+            model_name = llm.model_name
+        elif hasattr(llm, 'model'):
+            model_name = llm.model
+        else:
+            # Fallback: get from environment
+            from langchain_ollama_integration import get_llm_provider, get_openai_model, get_ollama_model
+            provider_name = provider or get_llm_provider()
+            if provider_name == "openai":
+                model_name = get_openai_model()
+            else:
+                model_name = get_ollama_model()
 
     # Create prompt chain if template provided
     if prompt_template:
@@ -124,7 +142,7 @@ def create_llm_node(
         chain = llm
 
     def llm_node(state: LLMState) -> LLMState:
-        """LangGraph node that processes input with Ollama LLM.
+        """LangGraph node that processes input with unified LLM.
 
         This node function is returned by create_llm_node and can be used
         directly in LangGraph workflows. It handles input validation,
@@ -148,7 +166,7 @@ def create_llm_node(
                     "metadata": {
                         **state.get("metadata", {}),
                         "error": "Empty input",
-                        "model": model,
+                        "model": model_name,
                     },
                 }
 
@@ -173,7 +191,7 @@ def create_llm_node(
                 "status": "completed",
                 "metadata": {
                     **state.get("metadata", {}),
-                    "model": model,
+                    "model": model_name,
                     "input_length": len(input_text),
                     "output_length": len(output_text),
                 },
@@ -186,9 +204,9 @@ def create_llm_node(
             # Provide helpful error message for model not found
             if "not found" in error_msg.lower() or "404" in error_msg:
                 suggestion = (
-                    f"Model '{model}' not found. "
+                    f"Model '{model_name}' not found. "
                     f"Available models: Use 'ollama list' to see installed models. "
-                    f"To download: 'ollama pull {model}' or use a different model like 'llama2', 'mistral', etc."
+                    f"To download: 'ollama pull {model_name}' or use a different model."
                 )
                 logger.warning(suggestion)
             
@@ -199,7 +217,7 @@ def create_llm_node(
                 "metadata": {
                     **state.get("metadata", {}),
                     "error": error_msg,
-                    "model": model,
+                    "model": model_name,
                     "error_type": type(e).__name__,
                 },
             }
@@ -248,12 +266,8 @@ def llm_analysis_node(state: MultiAgentState) -> Dict[str, Any]:
 Provide a detailed analysis with clear conclusions and recommendations."""
 
     # Create LLM node with analysis prompt
-    # Use environment default or "llama2" as fallback
-    from langchain_ollama_integration import get_ollama_model
-    
-    default_model = get_ollama_model()
+    # Uses unified factory - automatically selects provider from environment
     node = create_llm_node(
-        model=default_model,
         prompt_template=prompt_template,
         temperature=0.7,
     )
