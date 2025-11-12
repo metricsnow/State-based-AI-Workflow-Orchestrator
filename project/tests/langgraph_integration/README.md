@@ -188,4 +188,5 @@ pytest project/tests/langgraph_integration/ \
 - **[LangGraph Kafka Integration Guide](../../docs/langgraph-kafka-integration-guide.md)** - Complete integration guide
 - **[Event Schema Guide](../../docs/event-schema-guide.md)** - WorkflowEvent schema documentation
 - **[Kafka Producer Guide](../../docs/kafka-producer-guide.md)** - Publishing events to Kafka
+- **[End-to-End Integration Tests](../integration/)** - Complete pipeline tests (Airflow → Kafka → LangGraph → Result) (TASK-032)
 

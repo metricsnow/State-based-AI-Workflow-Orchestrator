@@ -65,6 +65,10 @@ project/tests/
     ├── test_installation.py    # LangGraph environment tests
     ├── test_state.py            # State definition and reducer tests
     └── README.md
+└── integration/            # End-to-end integration tests (Phase 3+)
+    ├── __init__.py
+    ├── test_airflow_langgraph_integration.py  # Complete pipeline tests (TASK-032)
+    └── README.md (if needed)
 ```
 
 ## Module Organization
@@ -168,6 +172,22 @@ pytest project/tests/langgraph_integration/test_result_integration.py -v
 
 # Run with coverage
 pytest project/tests/langgraph_integration/ --cov=langgraph_integration --cov-report=term-missing
+```
+
+**End-to-End Integration tests** (✅ Implemented - TASK-032):
+```bash
+# Ensure Kafka is running
+docker-compose ps kafka
+
+# Run all end-to-end integration tests (production conditions)
+pytest project/tests/integration/ -v -s
+
+# Run specific test classes
+pytest project/tests/integration/test_airflow_langgraph_integration.py::TestEndToEndWorkflowExecution -v
+pytest project/tests/integration/test_airflow_langgraph_integration.py::TestMilestone16AcceptanceCriteria -v
+
+# Run with coverage
+pytest project/tests/integration/ --cov=airflow_integration --cov=langgraph_integration --cov-report=term-missing
 ```
 
 ### Run by Marker
@@ -343,18 +363,48 @@ When adding tests for a new module:
   - ⚠️ `test_result_poller.py`: Unit tests with mocks (for fast unit testing)
   - ✅ Integration tests in `test_result_integration.py` use real Kafka for end-to-end testing
 
+### End-to-End Integration Tests (✅ Complete - TASK-032)
+- **Total Tests**: 14 tests
+- **Status**: All passing (14/14)
+- **Test Files**:
+  - `test_airflow_langgraph_integration.py`: Complete pipeline integration tests (TASK-032)
+- **Test Coverage**:
+  - End-to-end workflow execution (Airflow → Kafka → LangGraph → Result)
+  - Error handling and recovery
+  - Timeout handling
+  - Retry mechanisms
+  - Dead letter queue
+  - Event-driven coordination
+  - All Milestone 1.6 acceptance criteria validation
+- **Production Conditions**:
+  - ✅ All tests use real Kafka brokers - NO MOCKS, NO PLACEHOLDERS
+  - ✅ All tests use production environment values
+  - ✅ Tests connect to real Kafka at `localhost:9092`
+  - ✅ Tests validate complete integration pipeline
+- **Execution Time**: ~31 seconds (under 1 minute requirement)
+- **Test Classes**:
+  - `TestEndToEndWorkflowExecution`: Complete pipeline validation
+  - `TestErrorHandlingAndRecovery`: Error scenarios
+  - `TestTimeoutHandling`: Timeout scenarios
+  - `TestRetryMechanisms`: Retry logic validation
+  - `TestDeadLetterQueue`: DLQ functionality
+  - `TestEventDrivenCoordination`: Event coordination
+  - `TestMilestone16AcceptanceCriteria`: All 7 acceptance criteria validation
+
 ## Test Suite Summary
 
 ### Overall Statistics
-- **Total Tests**: 350+ tests
+- **Total Tests**: 364+ tests
   - Phase 1 (Infrastructure, Airflow, Kafka): 176 tests
   - Phase 2 (LangGraph): 144 tests
   - Phase 3 (LangGraph Integration): 30+ tests (TASK-027, TASK-028)
+  - Phase 3 (End-to-End Integration): 14 tests (TASK-032)
 - **Test Status**: All passing
 - **Coverage**:
   - Phase 1: 97% code coverage for TaskFlow DAG code
   - Phase 2: 100% code coverage for all LangGraph workflow modules
   - Phase 3: Integration tests cover end-to-end workflows and result publishing
+  - Phase 3: End-to-end integration tests validate complete pipeline (TASK-032)
 - **Testing Philosophy**: Integration tests run against production conditions - NO MOCKS, NO PLACEHOLDERS
 
 ### Test Breakdown by Module
@@ -364,6 +414,7 @@ When adding tests for a new module:
 - **LangGraph Tests**: 144 tests - Installation, state (including MultiAgentState), workflows, routing, checkpointing, integration
 - **LangGraph Integration Tests**: 30+ tests - Kafka consumer, result producer, end-to-end workflows (TASK-027, TASK-028)
 - **Airflow Integration Tests**: 7 tests - Result poller (TASK-028)
+- **End-to-End Integration Tests**: 14 tests - Complete pipeline (Airflow → Kafka → LangGraph → Result) (TASK-032)
 
 ### Production Conditions Verification
 
@@ -377,6 +428,12 @@ When adding tests for a new module:
 **Unit Tests (Fast Testing)**:
 ⚠️ **Some Unit Tests Use Mocks**: Fast unit tests for `ResultProducer` and `WorkflowResultPoller` use mocks
 ✅ **Integration Tests Validate Production**: All mocked functionality is validated in integration tests with real Kafka
+
+**End-to-End Integration Tests (TASK-032)**:
+✅ **Complete Pipeline Validation**: Tests validate full integration: Airflow → Kafka → LangGraph → Result
+✅ **All Acceptance Criteria**: All 7 Milestone 1.6 acceptance criteria validated
+✅ **Production Conditions**: All tests use real Kafka, no mocks, no placeholders
+✅ **Fast Execution**: Tests complete in ~31 seconds (under 1 minute requirement)
 
 **Test Categories**:
 - **Integration Tests**: Use real Kafka, real services, production conditions

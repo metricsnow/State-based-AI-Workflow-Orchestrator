@@ -24,6 +24,12 @@ The LangGraph Kafka integration provides an async Kafka consumer service that co
   - 13 retry unit tests, all passing
   - 8 DLQ unit tests, all passing
   - Integration tests with failure scenarios
+- ✅ **TASK-032: End-to-End Integration Testing (Complete)**
+  - Complete pipeline integration tests (Airflow → Kafka → LangGraph → Result)
+  - All 7 Milestone 1.6 acceptance criteria validated
+  - 14 comprehensive integration tests, all passing
+  - Error handling, timeout, retry, and DLQ scenarios tested
+  - Execution time: ~31 seconds (under 1 minute requirement)
 - **CRITICAL**: All tests use production conditions - no mocks, no placeholders
 
 ## Architecture
@@ -541,10 +547,13 @@ All tests use production conditions with real Kafka:
 
 ```bash
 # Run all integration tests
-pytest tests/langgraph_integration/ -v
+pytest project/tests/langgraph_integration/ -v
 
 # Run specific test file
-pytest tests/langgraph_integration/test_consumer_integration.py -v
+pytest project/tests/langgraph_integration/test_consumer_integration.py -v
+
+# Run end-to-end integration tests (TASK-032)
+pytest project/tests/integration/test_airflow_langgraph_integration.py -v -s
 ```
 
 ### Test Coverage
@@ -558,7 +567,15 @@ pytest tests/langgraph_integration/test_consumer_integration.py -v
 - **Dead Letter Queue Tests**: 8 tests (DLQ publishing, error handling, configuration)
 - **Error Handling Integration Tests**: 6 tests (retry integration, DLQ integration, failure scenarios)
 - **Result Integration Tests**: 3 tests (end-to-end result flow)
-- **Total**: 62 tests, all passing with production conditions
+- **End-to-End Integration Tests** (TASK-032): 14 tests (complete pipeline, all acceptance criteria)
+  - Complete workflow execution (Airflow → Kafka → LangGraph → Result)
+  - Error handling and recovery
+  - Timeout handling
+  - Retry mechanisms
+  - Dead letter queue
+  - Event-driven coordination
+  - All 7 Milestone 1.6 acceptance criteria validation
+- **Total**: 76 tests, all passing with production conditions
 
 **CRITICAL**: All tests use production conditions - no mocks, no placeholders.
 
