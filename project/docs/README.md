@@ -52,6 +52,11 @@ Complete documentation for the AI-Powered Workflow Orchestration project.
   - Compatibility verification, troubleshooting
   - 21 comprehensive production tests (20 passing, 1 skipped), all passing
   - **CRITICAL**: All tests use production conditions - no mocks, no placeholders
+- **[Ollama Model Management Guide](ollama-model-management-guide.md)** - Ollama model download and validation
+  - ✅ TASK-036: Model Download and Validation (Complete)
+  - Model download script, validation script, Docker setup script
+  - Model selection recommendations, troubleshooting
+  - Integration with LangChain-Ollama integration
 - **[LangGraph LLM Nodes Guide](langgraph-llm-nodes-guide.md)** - LLM nodes for LangGraph workflows
   - ✅ TASK-034: Create LangGraph Node with Ollama LLM (Complete)
   - Factory pattern for creating configurable LLM nodes

@@ -69,6 +69,10 @@ project/tests/
     ├── __init__.py
     ├── test_airflow_langgraph_integration.py  # Complete pipeline tests (TASK-032)
     └── README.md (if needed)
+└── scripts/                # Script tests (Phase 3+)
+    ├── __init__.py
+    ├── test_ollama_model_management.py  # Ollama model management script tests (TASK-036)
+    └── README.md
 ```
 
 ## Module Organization
@@ -118,6 +122,27 @@ Tests for Kafka producers, consumers, and event streaming.
 - Tests verify end-to-end publish → consume flow with real Kafka
 
 **Markers**: `@pytest.mark.kafka`, `@pytest.mark.events`
+
+### Scripts Module (`scripts/`)
+Tests for project scripts, including Ollama model management scripts.
+
+**Test Files** (✅ Implemented - TASK-036):
+- `test_ollama_model_management.py`: Ollama model management script tests - 14 tests using real Ollama CLI
+
+**Status**: ✅ 14 tests passing (all using production Ollama environment)
+- **CRITICAL**: All tests use real Ollama CLI - NO MOCKS, NO PLACEHOLDERS
+- Tests execute real Python scripts with actual Ollama commands
+- Tests validate actual model availability and functionality
+- Execution time: ~12 seconds (well under 1 minute requirement)
+
+**Coverage**:
+- Model download script (`download_ollama_model.py`)
+- Model validation script (`validate_ollama_models.py`)
+- Docker setup script (`setup-ollama-models.sh`)
+- Script existence and executability
+- Model listing and validation
+- Integration workflow testing
+- Error handling
 
 ## Running Tests
 
@@ -172,6 +197,21 @@ pytest project/tests/langgraph_integration/test_result_integration.py -v
 
 # Run with coverage
 pytest project/tests/langgraph_integration/ --cov=langgraph_integration --cov-report=term-missing
+```
+
+**Script tests** (✅ Implemented - TASK-036):
+```bash
+# Ensure Ollama is available
+which ollama
+
+# Run all script tests (production conditions)
+pytest project/tests/scripts/ -v -s
+
+# Run specific test file
+pytest project/tests/scripts/test_ollama_model_management.py -v -s
+
+# Run with detailed output
+pytest project/tests/scripts/test_ollama_model_management.py -v -s --tb=short
 ```
 
 **End-to-End Integration tests** (✅ Implemented - TASK-032):
@@ -394,11 +434,12 @@ When adding tests for a new module:
 ## Test Suite Summary
 
 ### Overall Statistics
-- **Total Tests**: 364+ tests
+- **Total Tests**: 378+ tests
   - Phase 1 (Infrastructure, Airflow, Kafka): 176 tests
   - Phase 2 (LangGraph): 144 tests
   - Phase 3 (LangGraph Integration): 30+ tests (TASK-027, TASK-028)
   - Phase 3 (End-to-End Integration): 14 tests (TASK-032)
+  - Phase 3 (Script Tests): 14 tests (TASK-036)
 - **Test Status**: All passing
 - **Coverage**:
   - Phase 1: 97% code coverage for TaskFlow DAG code
@@ -415,6 +456,7 @@ When adding tests for a new module:
 - **LangGraph Integration Tests**: 30+ tests - Kafka consumer, result producer, end-to-end workflows (TASK-027, TASK-028)
 - **Airflow Integration Tests**: 7 tests - Result poller (TASK-028)
 - **End-to-End Integration Tests**: 14 tests - Complete pipeline (Airflow → Kafka → LangGraph → Result) (TASK-032)
+- **Script Tests**: 14 tests - Ollama model management scripts (TASK-036)
 
 ### Production Conditions Verification
 
@@ -424,6 +466,7 @@ When adding tests for a new module:
 ✅ **Real Services**: Integration tests connect to real PostgreSQL, Kafka, Airflow instances
 ✅ **Real Libraries**: LangGraph integration tests use actual LangGraph components
 ✅ **Real Kafka**: All integration tests use real Kafka brokers (no mocks)
+✅ **Real Ollama**: Script tests use real Ollama CLI and actual model validation (TASK-036)
 
 **Unit Tests (Fast Testing)**:
 ⚠️ **Some Unit Tests Use Mocks**: Fast unit tests for `ResultProducer` and `WorkflowResultPoller` use mocks
@@ -441,6 +484,9 @@ When adding tests for a new module:
   - `test_result_integration.py` - Real Kafka end-to-end result flow
   - `test_consumer.py` - Real Kafka consumer
   - All Kafka tests - Real Kafka brokers
+- **Script Tests**: Use real Ollama CLI, production conditions
+  - `test_ollama_model_management.py` - Real Ollama CLI, real model validation (TASK-036)
+  - All script tests - Real Ollama commands, no mocks
 - **Unit Tests**: Fast tests with mocks (validated by integration tests)
   - `test_result_producer.py` - Mocked Kafka producer (validated in integration tests)
   - `test_result_poller.py` - Mocked Kafka consumer (validated in integration tests)
