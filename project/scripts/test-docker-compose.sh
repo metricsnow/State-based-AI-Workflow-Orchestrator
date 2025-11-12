@@ -1,6 +1,6 @@
 #!/bin/bash
 # Test script for Docker Compose environment setup
-# Usage: ./scripts/test-docker-compose.sh
+# Usage: ./project/scripts/test-docker-compose.sh
 
 set -e  # Exit on error
 
@@ -34,13 +34,13 @@ if [ -f .env ]; then
         echo -e "${GREEN}✓${NC} FERNET_KEY is set in .env"
     else
         echo -e "${YELLOW}⚠${NC} FERNET_KEY not properly configured in .env"
-        echo "   Run: ./scripts/generate-fernet-key.sh"
+        echo "   Run: ./project/scripts/generate-fernet-key.sh"
     fi
 else
     echo -e "${YELLOW}⚠${NC} .env file not found"
     echo "   Create .env file from .env.example"
     echo "   Run: cp .env.example .env"
-    echo "   Then generate FERNET_KEY: ./scripts/generate-fernet-key.sh"
+    echo "   Then generate FERNET_KEY: ./project/scripts/generate-fernet-key.sh"
 fi
 echo ""
 

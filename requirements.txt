@@ -19,3 +19,10 @@ typing-extensions>=4.8.0
 # Kafka Integration (TASK-027: Phase 3)
 aiokafka>=0.10.0
 
+# Testing framework
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Code quality
+black>=23.0.0
+mypy>=1.5.0

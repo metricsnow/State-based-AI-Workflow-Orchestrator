@@ -104,3 +104,7 @@ env/
 .coverage
 __pycache__/
 *.pyc
+
+# Test coverage and cache
+project/htmlcov/
+.pytest_cache/

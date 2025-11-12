@@ -77,7 +77,7 @@ source venv/bin/activate
 pip install cryptography
 
 # Generate FERNET_KEY
-./scripts/generate-fernet-key.sh
+./project/scripts/generate-fernet-key.sh
 ```
 
 Copy the generated FERNET_KEY.
@@ -105,7 +105,7 @@ pip install -r project/tests/infrastructure/requirements-test.txt
 pytest project/tests/infrastructure/test_docker_compose.py -v
 
 # Option 2: Shell script
-./scripts/test-docker-compose.sh
+./project/scripts/test-docker-compose.sh
 ```
 
 **Expected**: All 11 configuration tests should pass.
@@ -137,7 +137,7 @@ docker-compose logs -f
 
 ```bash
 # Run Airflow initialization script
-./scripts/init-airflow.sh
+./project/scripts/init-airflow.sh
 ```
 
 This script will:
@@ -310,7 +310,7 @@ After setup, your project structure should be:
 1. **Regenerate FERNET_KEY**:
    ```bash
    source venv/bin/activate
-   ./scripts/generate-fernet-key.sh
+   ./project/scripts/generate-fernet-key.sh
    ```
 
 2. **Update .env file** with new key
@@ -326,7 +326,7 @@ After setup, your project structure should be:
 1. **Database not initialized**:
    ```bash
    # Run initialization script
-   ./scripts/init-airflow.sh
+   ./project/scripts/init-airflow.sh
    ```
 
 2. **Admin user creation fails**:
@@ -334,7 +334,7 @@ After setup, your project structure should be:
    - If user exists, script will skip creation (this is normal)
 
 3. **Webserver won't start**:
-   - Ensure database is initialized first: `./scripts/init-airflow.sh`
+   - Ensure database is initialized first: `./project/scripts/init-airflow.sh`
    - Check logs: `docker-compose logs airflow-webserver`
    - Verify PostgreSQL is healthy: `docker-compose ps postgres`
 

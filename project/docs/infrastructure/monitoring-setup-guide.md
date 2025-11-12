@@ -18,7 +18,7 @@ This guide documents the Prometheus and Grafana monitoring setup for the AI-Powe
        │
 ┌──────▼───────┐
 │   Grafana    │ ← Visualizes metrics from Prometheus
-│  Port 3000   │
+│  Port 3002   │
 └──────────────┘
 ```
 
@@ -34,9 +34,10 @@ This guide documents the Prometheus and Grafana monitoring setup for the AI-Powe
 ### Access Points
 
 - **Prometheus UI**: http://localhost:9090
-- **Grafana UI**: http://localhost:3000
+- **Grafana UI**: http://localhost:3002
   - Default username: `admin`
   - Default password: `admin` (change via `.env` file)
+  - **Note**: Port changed to 3002 to avoid conflict with Open WebUI (port 3000) and other services (port 3001)
 
 ### Start Services
 
@@ -115,8 +116,8 @@ prometheus:
   ports:
     - "9090:9090"
   volumes:
-    - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    - ./project/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - ./project/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
     - prometheus_data:/prometheus
   command:
     - '--config.file=/etc/prometheus/prometheus.yml'
@@ -125,15 +126,15 @@ prometheus:
 
 grafana:
   image: grafana/grafana:latest
-  ports:
-    - "3000:3000"
+    ports:
+      - "3002:3000"
   environment:
     - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
   volumes:
     - grafana_data:/var/lib/grafana
-    - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
-    - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    - ./project/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    - ./project/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
 ```
 
 ## Airflow Metrics
@@ -181,7 +182,7 @@ up
 - Airflow Health (gauge)
 - DAG Run States (timeseries)
 
-**Access**: http://localhost:3000 → Dashboards → Airflow Overview
+**Access**: http://localhost:3002 → Dashboards → Airflow Overview
 
 ## Environment Variables
 
@@ -258,7 +259,7 @@ grafana/
    - All targets should show as "UP"
 
 2. **Verify Grafana Dashboards**:
-   - Access: http://localhost:3000
+   - Access: http://localhost:3002
    - Login with admin credentials
    - Navigate to Dashboards → Airflow Overview
    - Verify metrics are displayed

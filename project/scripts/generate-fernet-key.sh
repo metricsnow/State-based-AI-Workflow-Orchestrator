@@ -1,6 +1,6 @@
 #!/bin/bash
 # Generate FERNET_KEY for Airflow encryption
-# Usage: ./scripts/generate-fernet-key.sh
+# Usage: ./project/scripts/generate-fernet-key.sh
 
 # Check if venv is activated
 if [[ -z "$VIRTUAL_ENV" ]]; then

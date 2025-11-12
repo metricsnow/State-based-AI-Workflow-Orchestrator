@@ -318,9 +318,15 @@ The architecture is built on an event-driven foundation using Apache Kafka, whic
 │       ├── langgraph/       # LangGraph tests (125 tests - Phase 2+)
 │       └── langgraph_integration/ # LangGraph-Kafka integration tests (22 tests - Phase 3+)
 │                           # Total: 323 tests, 100% LangGraph coverage
-├── scripts/                 # Utility scripts
-│   ├── generate-fernet-key.sh
-│   └── test-docker-compose.sh
+│   ├── scripts/             # Utility scripts
+│   │   ├── generate-fernet-key.sh
+│   │   ├── init-airflow.sh
+│   │   ├── test-docker-compose.sh
+│   │   ├── download_ollama_model.py
+│   │   ├── setup-ollama-models.sh
+│   │   └── validate_ollama_models.py
+│   ├── grafana/             # Grafana dashboards and datasources
+│   └── prometheus/          # Prometheus configuration
 ├── docker-compose.yml       # Docker Compose configuration
 ├── pytest.ini              # Pytest configuration
 ├── .env                     # Environment variables (not in git)

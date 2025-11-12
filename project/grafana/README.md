@@ -43,9 +43,10 @@ docker compose up -d grafana
 
 ### Access Grafana UI
 
-- URL: http://localhost:3000
+- URL: http://localhost:3002
 - Default username: `admin`
 - Default password: `admin` (change in production via `.env` file)
+- **Note**: Port changed to 3002 to avoid conflict with Open WebUI (port 3000) and other services (port 3001)
 
 ### Available Dashboards
 

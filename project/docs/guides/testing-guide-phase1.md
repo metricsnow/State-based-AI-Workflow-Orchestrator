@@ -88,7 +88,7 @@ pytest project/tests/infrastructure/test_docker_compose.py -v
 
 **Option 2: Shell Script**
 ```bash
-./scripts/test-docker-compose.sh
+./project/scripts/test-docker-compose.sh
 ```
 
 Both methods validate:
@@ -121,7 +121,7 @@ Both methods validate:
 4. **Generate FERNET_KEY if needed**:
    ```bash
    source venv/bin/activate
-   ./scripts/generate-fernet-key.sh
+   ./project/scripts/generate-fernet-key.sh
    ```
 
 ## Service Startup Testing

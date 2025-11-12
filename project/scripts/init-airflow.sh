@@ -7,7 +7,7 @@
 # which allows initialization even if the webserver service isn't running yet.
 #
 # Usage:
-#   ./scripts/init-airflow.sh
+#   ./project/scripts/init-airflow.sh
 #
 # Prerequisites:
 #   - Docker Compose services must be running (at minimum: postgres)
