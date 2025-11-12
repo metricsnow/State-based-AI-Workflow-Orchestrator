@@ -2,7 +2,9 @@
 
 ## Overview
 
-This guide documents the LangChain-Ollama integration setup (TASK-026) for using Ollama LLM models with LangChain and LangGraph workflows.
+This guide documents the LangChain-Ollama integration setup (TASK-026, TASK-033) for using Ollama LLM models with LangChain and LangGraph workflows.
+
+**Status**: ✅ TASK-033 Complete - Integration module implemented and tested
 
 ## Package Installation
 
@@ -65,9 +67,38 @@ from langchain_ollama.llms import OllamaLLM
 
 **Note**: The `langchain_community.llms.Ollama` import is deprecated. Always use `langchain_ollama.OllamaLLM` instead.
 
+## Integration Module (TASK-033)
+
+### Using the Integration Module
+
+The `langchain_ollama_integration` module provides a factory pattern for creating Ollama LLM instances with proper configuration management.
+
+```python
+from langchain_ollama_integration import create_ollama_llm, get_ollama_llm
+
+# Create LLM with default configuration (from environment variables)
+llm = get_ollama_llm()
+
+# Create LLM with custom model
+llm = create_ollama_llm(model="llama2:7b")
+
+# Create LLM with custom parameters
+llm = create_ollama_llm(
+    model="llama2:13b",
+    base_url="http://localhost:11434",
+    temperature=0.7
+)
+```
+
+**Benefits**:
+- Environment variable configuration
+- Automatic Docker/local environment detection
+- Consistent error handling and logging
+- Production-ready factory pattern
+
 ## Basic Usage
 
-### Initialization
+### Direct Initialization
 
 ```python
 from langchain_ollama import OllamaLLM
@@ -83,6 +114,21 @@ llm = OllamaLLM(
 llm = OllamaLLM(
     model="llama2:13b",
     base_url="http://ollama:11434",  # Use service name in Docker
+    temperature=0.7
+)
+```
+
+### Using Integration Module (Recommended)
+
+```python
+from langchain_ollama_integration import create_ollama_llm
+
+# Uses environment variables for configuration
+llm = create_ollama_llm()
+
+# Or with explicit parameters
+llm = create_ollama_llm(
+    model="llama2:13b",
     temperature=0.7
 )
 ```
@@ -144,7 +190,44 @@ print(result)
 
 ## Integration with LangGraph
 
-### LLM Node in LangGraph Workflow
+### LLM Node in LangGraph Workflow (Using Integration Module)
+
+```python
+from langgraph.graph import StateGraph, START, END
+from langchain_ollama_integration import create_ollama_llm
+from typing import TypedDict
+
+class LLMState(TypedDict):
+    input: str
+    output: str
+    status: str
+
+def llm_node(state: LLMState) -> LLMState:
+    """Node that uses Ollama LLM via integration module"""
+    # Use integration module for consistent configuration
+    llm = create_ollama_llm(model="llama2", temperature=0.7)
+    
+    input_text = state.get("input", "")
+    output = llm.invoke(input_text)
+    
+    return {
+        "input": input_text,
+        "output": output,
+        "status": "completed"
+    }
+
+# Build workflow
+workflow = StateGraph(LLMState)
+workflow.add_node("llm_processing", llm_node)
+workflow.add_edge(START, "llm_processing")
+workflow.add_edge("llm_processing", END)
+
+# Compile and run
+app = workflow.compile()
+result = app.invoke({"input": "Hello, world!", "output": "", "status": "processing"})
+```
+
+### Direct OllamaLLM Usage (Alternative)
 
 ```python
 from langgraph.graph import StateGraph, START, END
@@ -157,7 +240,7 @@ class LLMState(TypedDict):
     status: str
 
 def llm_node(state: LLMState) -> LLMState:
-    """Node that uses Ollama LLM"""
+    """Node that uses Ollama LLM directly"""
     llm = OllamaLLM(
         model="llama2",
         base_url="http://localhost:11434",
@@ -216,21 +299,37 @@ assert issubclass(OllamaLLM, BaseLLM), "OllamaLLM should inherit from BaseLLM"
 
 ### Production Tests
 
-Comprehensive tests are available in `project/tests/langgraph/test_langchain_ollama_integration.py`:
+Comprehensive tests are available for both the package integration and the integration module:
 
 ```bash
-# Run all langchain-ollama integration tests
+# Run all langchain-ollama package tests
 pytest project/tests/langgraph/test_langchain_ollama_integration.py -v
+
+# Run integration module tests (TASK-033)
+pytest project/tests/langgraph_integration/test_ollama_integration.py -v
+
+# Run all Ollama integration tests
+pytest project/tests/langgraph/test_langchain_ollama_integration.py project/tests/langgraph_integration/test_ollama_integration.py -v
 ```
 
-**Test Coverage** (13 tests):
-- Package import verification
-- Version requirement validation
-- OllamaLLM class attributes
-- Real initialization (no mocks)
-- Dependency verification
-- LangChain compatibility
-- Requirements.txt validation
+**Test Coverage**:
+- **Package Integration Tests** (13 tests): `test_langchain_ollama_integration.py`
+  - Package import verification
+  - Version requirement validation
+  - OllamaLLM class attributes
+  - Real initialization (no mocks)
+  - Dependency verification
+  - LangChain compatibility
+  - Requirements.txt validation
+
+- **Integration Module Tests** (8 tests): `test_ollama_integration.py`
+  - LLM factory function tests
+  - Default configuration tests
+  - Custom parameter tests
+  - Error handling tests
+  - Environment variable configuration tests
+
+**Total**: 21 tests (20 passing, 1 skipped - requires Ollama service)
 
 **All tests run under production conditions - NO MOCKS, NO PLACEHOLDERS.**
 
@@ -312,21 +411,44 @@ pip install --upgrade langchain-ollama
 5. **Verify Ollama service** is running before initialization
 6. **Handle connection errors** gracefully in production code
 
+## Module Structure
+
+The integration module (`langchain_ollama_integration`) provides:
+
+```
+project/langchain_ollama_integration/
+├── __init__.py          # Module exports
+└── llm_factory.py       # LLM factory functions
+```
+
+**Exports**:
+- `create_ollama_llm()` - Factory function for creating OllamaLLM instances
+- `get_ollama_llm()` - Get default LLM instance using environment configuration
+
+**Features**:
+- Environment variable configuration (`OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `DOCKER_ENV`)
+- Automatic Docker/local environment detection
+- Error handling and logging
+- Production-ready factory pattern
+
 ## Related Documentation
 
-- **TASK-026**: Update Requirements with LangChain-Ollama Integration
-- **TASK-025**: Ollama Service Docker Integration
-- **TASK-033**: Set Up Ollama with LangChain Integration (Implementation)
+- **TASK-025**: Ollama Service Docker Integration (Complete)
+- **TASK-026**: Update Requirements with LangChain-Ollama Integration (Complete)
+- **TASK-033**: Set Up Ollama with LangChain Integration (Complete) ✅
 - **Setup Guide**: `project/docs/setup-guide.md`
 - **Testing Guide**: `project/tests/langgraph/README.md`
 
 ## Next Steps
 
-After completing TASK-026:
+After completing TASK-033:
 1. ✅ Package installed and verified
-2. **TASK-033**: Implement Ollama LangChain integration module
+2. ✅ Integration module implemented and tested
 3. **TASK-034**: Create LangGraph node with Ollama LLM
 4. **TASK-035**: Integrate LLM inference in LangGraph workflows
+5. **TASK-036**: Model Download and Validation
+6. **TASK-037**: LLM Integration Testing
+7. **TASK-038**: Create Unified LLM Factory with Model Toggle (Ollama/OpenAI)
 
 See `project/dev/tasks/` for task details.
 
